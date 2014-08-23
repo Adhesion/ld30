@@ -39,10 +39,36 @@ var LD30 = function() {
     };
 };
 
+var Player = me.ObjectEntity.extend({
+    init: function(args) {
+        me.input.bindKey(me.input.KEY.L, "type_l");
+        me.input.bindKey(me.input.KEY.l, "type_l");
+        this.overworld = true;
+        this.subscription = me.event.subscribe(me.event.KEYDOWN, this.keyDown.bind(this));
+    },
+
+    keyDown: function( action ) {
+        if(action) {
+            this.overworld = !this.overworld;
+            var level = me.game.currentLevel;
+            var overworldLayers = level.getLayers();
+            overworldLayers = overworldLayers.filter(function(layer){
+                return null != layer.name.match( /overworld/ )
+            }, this);
+            overworldLayers.forEach(function(layer) {
+                layer.alpha = this.overworld ? 1 : 0;
+            }, this);
+            me.game.repaint();
+        }
+    },
+})
+
 /** The game play state... */
 var PlayScreen = me.ScreenObject.extend({
     init: function() {
         this.parent( true );
+        // TODO Replace this with an entity.
+        this.player = new Player();
     },
 
     getLevel: function() {
@@ -58,10 +84,8 @@ var PlayScreen = me.ScreenObject.extend({
     /** Update the level display & music. Called on all level changes. */
     changeLevel: function( level ) {
         // this only gets called on start?
-        //me.audio.stopTrack();
         me.game.world.sort();
         me.game.viewport.fadeOut( '#000000', 1000, function() {
-         //   me.audio.playTrack( level );
         });
     },
 
@@ -73,7 +97,6 @@ var PlayScreen = me.ScreenObject.extend({
     },
 
     onDestroyEvent: function() {
-       // me.audio.stopTrack();
     },
 
     update: function() {
