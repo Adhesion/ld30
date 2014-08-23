@@ -50,18 +50,24 @@ var Player = me.ObjectEntity.extend({
     keyDown: function( action ) {
         if(action) {
             this.overworld = !this.overworld;
-            var level = me.game.currentLevel;
-            var overworldLayers = level.getLayers();
-            overworldLayers = overworldLayers.filter(function(layer){
-                return null != layer.name.match( /overworld/ )
-            }, this);
-            overworldLayers.forEach(function(layer) {
-                layer.alpha = this.overworld ? 1 : 0;
-            }, this);
-            me.game.repaint();
+            updateLayerVisibility(this.overworld);
         }
     },
 })
+
+function updateLayerVisibility(overworld) {
+    var level = me.game.currentLevel;
+    level.getLayers().forEach(function(layer){
+        if( layer.name.match( /overworld/ ) ) {
+            layer.alpha = overworld ? 0.5 : 0;
+        }
+        else if( layer.name.match( /underworld/ ) ) {
+            layer.alpha = overworld ? 0 : 0.5;
+        }
+    }, this);
+    me.game.repaint();
+    return;
+}
 
 /** The game play state... */
 var PlayScreen = me.ScreenObject.extend({
@@ -83,6 +89,8 @@ var PlayScreen = me.ScreenObject.extend({
 
     /** Update the level display & music. Called on all level changes. */
     changeLevel: function( level ) {
+        // TODO: Makethis track the real variable...
+        updateLayerVisibility(true);
         // this only gets called on start?
         me.game.world.sort();
         me.game.viewport.fadeOut( '#000000', 1000, function() {
