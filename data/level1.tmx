@@ -56,6 +56,7 @@
  </layer>
  <objectgroup name="entities" width="22" height="18">
   <object name="player" x="96" y="96" width="144" height="144"/>
+  <object name="baddie" x="512" y="161" width="137" height="204"/>
  </objectgroup>
  <layer name="foreground_underworld" width="22" height="18">
   <data encoding="base64">

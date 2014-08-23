@@ -40,10 +40,38 @@ var LD30 = function() {
         me.state.change( me.state.INTRO );
 
         me.pool.register( "player", Player );
-        //me.pool.register( "baddie", Baddie );
-
+        me.pool.register( "baddie", Baddie );
     };
 };
+
+var Baddie = me.ObjectEntity.extend({
+    init: function(x, y, settings) {
+        settings.image = settings.image || 'robut';
+        settings.spritewidth = 80;
+        settings.spriteheight = 80;
+        this.parent( x, y, settings );
+        this.alwaysUpdate = true;
+
+        this.setVelocity( 3, 15 );
+        this.setFriction( 0.4, 0 );
+        this.direction = 1;
+        this.collidable = true;
+
+        this.renderable.animationspeed = 70
+    },
+
+    update: function(dt) {
+        this.parent(dt);
+        this.updateMovement();
+        var col = me.game.world.collide(this);
+        if(col && col.obj.bullet ) {
+            // TODO : Do something awesome here.
+            me.game.world.removeChild(this);
+        }
+        return true;
+    },
+
+});
 
 var Player = me.ObjectEntity.extend({
     init: function(x, y, settings) {
@@ -58,11 +86,12 @@ var Player = me.ObjectEntity.extend({
 
         this.setVelocity( 3, 15 );
         this.setFriction( 0.4, 0 );
-        this.anchorPoint.set(0.5, 1.0);
         this.direction = 1;
 
-        this.followPos = new me.Vector2d( this.pos.x + this.centerOffsetX,
-        this.pos.y + this.centerOffsetY );
+        this.followPos = new me.Vector2d(
+            this.pos.x + this.centerOffsetX,
+            this.pos.y + this.centerOffsetY
+        );
         me.game.viewport.follow( this.followPos, me.game.viewport.AXIS.BOTH );
         me.game.viewport.setDeadzone( me.game.viewport.width / 10, 1 );
 
@@ -143,6 +172,7 @@ var Bullet = me.ObjectEntity.extend({
         settings.width = 96;
         direction = settings.direction;
         this.parent( x, y, settings );
+        this.bullet = true;
         this.collidable = true;
         this.z = 300;
         this.gravity = 0;

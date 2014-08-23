@@ -26,6 +26,8 @@ var GameResources = [
     _Image( "zap" ),
     _Image( "player" ),
 
+    _Image( "robut" ),
+
     //_Audio( "beep", "data/" ),
     _Image( "mapshit1"),
     _Image( "collision_tiles" ),
