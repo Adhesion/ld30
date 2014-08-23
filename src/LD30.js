@@ -59,10 +59,10 @@ function updateLayerVisibility(overworld) {
     var level = me.game.currentLevel;
     level.getLayers().forEach(function(layer){
         if( layer.name.match( /overworld/ ) ) {
-            layer.alpha = overworld ? 0.5 : 0;
+            layer.alpha = overworld ? 1 : 0;
         }
         else if( layer.name.match( /underworld/ ) ) {
-            layer.alpha = overworld ? 0 : 0.5;
+            layer.alpha = overworld ? 0 : 1;
         }
     }, this);
     me.game.repaint();
