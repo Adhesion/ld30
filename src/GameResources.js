@@ -22,6 +22,10 @@ var GameResources = [
     _Image( "intro_radmars2" ),
     _Audio( "radmarslogo" ),
 
+    // Player
+    _Image( "zap" ),
+    _Image( "player" ),
+
     //_Audio( "beep", "data/" ),
     _Image( "mapshit1"),
     _Image( "collision_tiles" ),

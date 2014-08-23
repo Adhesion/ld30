@@ -1,5 +1,5 @@
-var screenHeight = 600;
-var screenWidth = 800;
+var screenHeight = 560;
+var screenWidth = 960;
 
 var LD30 = function() {
 
@@ -34,25 +34,77 @@ var LD30 = function() {
         me.state.change( me.state.PLAY );
         //me.debug.renderHitBox = false;
 
-        // me.pool.register( "player", Player );
+        me.pool.register( "player", Player );
+        //me.pool.register( "baddie", Baddie );
 
     };
 };
 
 var Player = me.ObjectEntity.extend({
-    init: function(args) {
-        me.input.bindKey(me.input.KEY.L, "type_l");
-        me.input.bindKey(me.input.KEY.l, "type_l");
-        this.overworld = true;
-        this.subscription = me.event.subscribe(me.event.KEYDOWN, this.keyDown.bind(this));
+    init: function(x, y, settings) {
+        settings.image        = settings.image        || 'player';
+        this.parent( x, y, settings );
+        this.alwaysUpdate = true;
+        var shape = this.getShape();
+        shape.pos.x = 44;
+        shape.pos.y = 59;
+        shape.resize(88, 76);
+        me.state.current().player = this;
+
+        this.setVelocity( 3, 15 );
+        this.setFriction( 0.4, 0 );
+        this.anchorPoint.set(0.5, 1.0);
+        this.direction = 1;
+
+        this.followPos = new me.Vector2d( this.pos.x + this.centerOffsetX,
+        this.pos.y + this.centerOffsetY );
+        me.game.viewport.follow( this.followPos, me.game.viewport.AXIS.BOTH );
+        me.game.viewport.setDeadzone( me.game.viewport.width / 10, 1 );
+
+        this.renderable.animationspeed = 70
+        this.renderable.addAnimation( "idle", [ 0, 1, 2, 3 ] );
+        this.renderable.addAnimation( "jump", [ 4 ] );
+        this.renderable.addAnimation( "jump_extra", [ 5 ] );
+        this.renderable.addAnimation( "fall", [ 6 ] );
+        this.renderable.addAnimation( "run", [ 7, 8, 9, 10 ] );
+        this.renderable.addAnimation( "attack", [ 11 ] );
+        this.renderable.addAnimation( "wallstuck", [ 12 ] );
+        this.renderable.addAnimation( "buttstomp", [ 13 ] );
+        this.renderable.addAnimation( "impact", [ 14 ] );
+        this.renderable.addAnimation( "die", [ 15 ] );
+        this.renderable.addAnimation( "swim_idle", [ 16, 17, 18, 19 ] );
+        this.renderable.addAnimation( "swim", [ 20, 21, 22, 23 ] );
+        this.renderable.addAnimation( "hidden", [ 24 ] );
+        this.renderable.setCurrentAnimation("idle");
+
+        me.input.bindKey(me.input.KEY.LEFT,  "left");
+        me.input.bindKey(me.input.KEY.RIGHT, "right");
+        me.input.bindKey(me.input.KEY.X,    "jump", true);
+        me.input.bindKey(me.input.KEY.UP,   "jump", true);
+        me.input.bindKey(me.input.KEY.DOWN, "down");
+
+        me.input.bindKey(me.input.KEY.A,    "left");
+        me.input.bindKey(me.input.KEY.D,    "right");
+        me.input.bindKey(me.input.KEY.W,    "up");
+        me.input.bindKey(me.input.KEY.S,    "down");
+
     },
 
-    keyDown: function( action ) {
-        if(action) {
-            this.overworld = !this.overworld;
-            updateLayerVisibility(this.overworld);
+    update: function(dt) {
+        this.parent(dt);
+        if (me.input.isKeyPressed('left'))  {
+            this.vel.x -= this.accel.x * me.timer.tick;
+            this.flipX(true);
+            this.direction = -1;
+        } else if (me.input.isKeyPressed('right')) {
+            this.vel.x += this.accel.x * me.timer.tick;
+            this.flipX(false);
+            this.direction = 1;
         }
-    },
+
+        this.updateMovement();
+        return true;
+    }
 })
 
 function updateLayerVisibility(overworld) {
@@ -69,12 +121,67 @@ function updateLayerVisibility(overworld) {
     return;
 }
 
+var Bullet = me.ObjectEntity.extend({
+    init: function(x, y, settings) {
+        settings = settings || {};
+        settings.image = settings.image || "zap";
+        settings.spritewidth =  96;
+        settings.spriteheight = 48;
+        settings.height = 48;
+        settings.width = 96;
+        direction = settings.direction;
+        this.parent( x, y, settings );
+        this.collidable = true;
+        this.z = 300;
+        this.gravity = 0;
+        this.vel.x = direction * 5.0;
+        this.flipX( direction > 0 );
+    },
+
+    onCollision: function() {
+        console.log("boom");
+    },
+
+    update: function( dt ) {
+        this.parent( dt );
+        this.updateMovement();
+        if (!this.inViewport && (this.pos.y > me.video.getHeight())) {
+            // if yes reset the game
+            me.game.world.removeChild(this);
+        }
+        if( this.vel.x == 0 ) {
+            // we hit a wall?
+            me.game.world.removeChild(this);
+        }
+
+        return true;
+    }
+
+});
+
 /** The game play state... */
 var PlayScreen = me.ScreenObject.extend({
     init: function() {
         this.parent( true );
-        // TODO Replace this with an entity.
-        this.player = new Player();
+        console.log(me.state.current());
+        me.input.bindKey(me.input.KEY.l, "type_l");
+        me.input.bindKey(me.input.KEY.L, "type_l");
+        me.input.bindKey(me.input.KEY.SPACE, "shoot");
+        this.overworld = true;
+        this.subscription = me.event.subscribe(me.event.KEYDOWN, this.keyDown.bind(this));
+
+    },
+
+    keyDown: function( action ) {
+        if(action == "type_l") {
+            this.overworld = !this.overworld;
+            updateLayerVisibility(this.overworld);
+        }
+        else if(action == "shoot") {
+            var b = new Bullet(this.player.pos.x, this.player.pos.y, { direction: this.player.direction });
+            me.game.world.addChild(b);
+            me.game.world.sort();
+        }
     },
 
     getLevel: function() {
@@ -90,7 +197,7 @@ var PlayScreen = me.ScreenObject.extend({
     /** Update the level display & music. Called on all level changes. */
     changeLevel: function( level ) {
         // TODO: Makethis track the real variable...
-        updateLayerVisibility(true);
+        updateLayerVisibility(this.overworld);
         // this only gets called on start?
         me.game.world.sort();
         me.game.viewport.fadeOut( '#000000', 1000, function() {
@@ -185,7 +292,6 @@ var RadmarsRenderable = me.Renderable.extend({
         me.game.repaint();
     }
 });
-
 
 window.onReady(function() {
     window.app = new LD30();
