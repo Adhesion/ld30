@@ -13,6 +13,13 @@ var LD30 = function() {
 
         me.audio.init ("m4a,ogg" );
 
+        // TODO: Delete thie garbage
+        if (true) {
+            window.onReady(function () {
+                me.plugin.register.defer(this, debugPanel, "debug", me.input.KEY.V);
+                me.debug.renderHitBox = true;
+            });
+        }
         // Sync up post loading stuff.
         me.loader.onload = this.loaded.bind( this );
 
@@ -77,27 +84,34 @@ var Player = me.ObjectEntity.extend({
 
         me.input.bindKey(me.input.KEY.LEFT,  "left");
         me.input.bindKey(me.input.KEY.RIGHT, "right");
-        me.input.bindKey(me.input.KEY.X,    "jump", true);
-        me.input.bindKey(me.input.KEY.UP,   "jump", true);
-        me.input.bindKey(me.input.KEY.DOWN, "down");
+        me.input.bindKey(me.input.KEY.UP,   "up", true);
+        me.input.bindKey(me.input.KEY.W,    "up", true);
 
         me.input.bindKey(me.input.KEY.A,    "left");
         me.input.bindKey(me.input.KEY.D,    "right");
-        me.input.bindKey(me.input.KEY.W,    "up");
-        me.input.bindKey(me.input.KEY.S,    "down");
-
     },
 
     update: function(dt) {
         this.parent(dt);
+        // TODO acceleration
         if (me.input.isKeyPressed('left'))  {
-            this.vel.x -= this.accel.x * me.timer.tick;
+            this.vel.x = -5.5;
             this.flipX(true);
             this.direction = -1;
+            this.renderable.setCurrentAnimation("run");
         } else if (me.input.isKeyPressed('right')) {
-            this.vel.x += this.accel.x * me.timer.tick;
+            this.vel.x = 5.5;
             this.flipX(false);
             this.direction = 1;
+            this.renderable.setCurrentAnimation("run");
+        }
+        else {
+            this.renderable.setCurrentAnimation("idle");
+        }
+
+        if( me.input.isKeyPressed('up') && !this.jumping && !this.falling) {
+            this.vel.y = -29;
+            this.jumping = true;
         }
 
         this.updateMovement();
