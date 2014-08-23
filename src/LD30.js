@@ -30,9 +30,7 @@ var LD30 = function() {
         me.state.set( me.state.INTRO, new RadmarsScreen() );
         me.state.set( me.state.PLAY, new PlayScreen() );
 
-      //  me.state.change( me.state.INTRO );
-        me.state.change( me.state.PLAY );
-        //me.debug.renderHitBox = false;
+        me.state.change( me.state.INTRO );
 
         me.pool.register( "player", Player );
         //me.pool.register( "baddie", Baddie );
@@ -139,7 +137,6 @@ var Bullet = me.ObjectEntity.extend({
     },
 
     onCollision: function() {
-        console.log("boom");
     },
 
     update: function( dt ) {
@@ -163,7 +160,6 @@ var Bullet = me.ObjectEntity.extend({
 var PlayScreen = me.ScreenObject.extend({
     init: function() {
         this.parent( true );
-        console.log(me.state.current());
         me.input.bindKey(me.input.KEY.l, "type_l");
         me.input.bindKey(me.input.KEY.L, "type_l");
         me.input.bindKey(me.input.KEY.SPACE, "shoot");
@@ -226,7 +222,7 @@ var RadmarsScreen = me.ScreenObject.extend({
 
         this.subscription = me.event.subscribe( me.event.KEYDOWN, function (action, keyCode, edge) {
             if( keyCode === me.input.KEY.ENTER ) {
-                me.state.change( me.state.MENU );
+                me.state.change( me.state.PLAY );
             }
         });
 
