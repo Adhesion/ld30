@@ -29,6 +29,14 @@ var GameResources = [
     _Image( "robut" ),
     _Image( "cat" ),
     _Image( "cat_skel" ),
+    /*
+    _Image( "wasp" ),
+    _Image( "wasp_skel" ),
+    _Image( "fish" ),
+    _Image( "fish_skel" ),
+    */
+    _Image( "crab" ),
+    _Image( "crab_skel" ),
 
     _Image( "pickup" ),
     _Image( "baddieBullet" ),
