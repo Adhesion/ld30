@@ -42,8 +42,47 @@ var LD30 = function() {
         me.pool.register( "player", Player );
         me.pool.register( "baddie", Baddie );
         me.pool.register( "pickup", Pickup );
+        me.pool.register( "underworld", Underworld );
+        me.pool.register( "levelchanger", LevelChanger );
+
     };
 };
+
+var LevelChanger = me.ObjectEntity.extend({
+    init: function(x, y, settings) {
+        // TODO: Just bake image or attach to obj?
+        this.parent( x, y, settings );
+        this.gravity = 0;
+        this.collidable = true;
+    },
+    update: function(dt) {
+        // TODO: Just bake image or attach to obj?
+        this.parent(dt);
+        this.updateMovement();
+        var col = me.game.world.collide(this);
+        if(col && col.obj == me.state.current().player ) {
+            me.state.current().goToLevel("level1");
+        }
+    }
+});
+
+
+var Underworld = me.ObjectEntity.extend({
+    init: function(x, y, settings) {
+        this.parent( x, y, settings );
+        this.gravity = 0;
+        this.collidable = true;
+    },
+    update: function(dt) {
+        this.parent(dt);
+        this.updateMovement();
+        var col = me.game.world.collide(this);
+        if(col && col.obj == me.state.current().player ) {
+            me.state.current().toUnderworld();
+        }
+    }
+});
+
 
 var Baddie = me.ObjectEntity.extend({
     init: function(x, y, settings) {
@@ -370,14 +409,27 @@ var Bullet = me.ObjectEntity.extend({
 var PlayScreen = me.ScreenObject.extend({
     init: function() {
         this.parent( true );
-        this.baddies = [];
-        me.input.bindKey(me.input.KEY.l, "type_l");
-        me.input.bindKey(me.input.KEY.L, "type_l");
         me.input.bindKey(me.input.KEY.SPACE, "shoot");
+        this.baddies = [];
         this.overworld = true;
         this.subscription = me.event.subscribe(me.event.KEYDOWN, this.keyDown.bind(this));
 
     },
+
+    toUnderworld: function() {
+        if( this.overworld ) {
+            this.overworld = false;
+            this.updateLayerVisibility(this.overworld);
+        }
+    },
+
+    goToLevel: function( level ) {
+        this.baddies = [];
+        this.overworld = true;
+        me.levelDirector.loadLevel( level );
+        me.state.current().changeLevel( level );
+    },
+
 
     updateLayerVisibility: function(overworld) {
         var level = me.game.currentLevel;
@@ -410,11 +462,7 @@ var PlayScreen = me.ScreenObject.extend({
     },
 
     keyDown: function( action ) {
-        if(action == "type_l") {
-            this.overworld = !this.overworld;
-            this.updateLayerVisibility(this.overworld);
-        }
-        else if(action == "shoot") {
+        if(action == "shoot") {
             var b = new Bullet(this.player.pos.x, this.player.pos.y, { direction: this.player.direction });
             me.game.world.addChild(b);
             me.game.world.sort();
