@@ -41,6 +41,12 @@ var LD30 = function() {
 
         me.pool.register( "player", Player );
         me.pool.register( "baddie", Baddie );
+
+        me.pool.register( "fish", Fish );
+        me.pool.register( "wasp", Wasp );
+        me.pool.register( "crab", Crab );
+        me.pool.register( "cat", Cat );
+
         me.pool.register( "pickup", Pickup );
         me.pool.register( "underworld", Underworld );
         me.pool.register( "levelchanger", LevelChanger );
@@ -104,18 +110,10 @@ var Baddie = me.ObjectEntity.extend({
         me.state.current().baddies.push(this);
 
         this.renderable.animationspeed = 70;
-
-        console.log("baddie added ");
     },
-
-    update: function(dt) {
-        this.parent(dt);
-        this.updateMovement();
+    checkBulletCollision: function(){
         var col = me.game.world.collide(this);
         if(col && col.obj.bullet && !this.overworld ) {
-            //this.renderable.flicker(2000);
-            //this.renderable.animationpause = true;
-
             col.obj.die();
             me.state.current().baddies.remove(this);
 
@@ -123,7 +121,7 @@ var Baddie = me.ObjectEntity.extend({
             this.collidable = false;
             me.game.world.removeChild(this);
 
-            var p = new Pickup(this.pos.x, this.pos.y-50, {});
+            var p = new Pickup(this.pos.x, this.pos.y-150, {});
             me.game.world.addChild(p);
 
             var b = new Baddie(this.pos.x, this.pos.y, { overworld:1, width:80, height:80});
@@ -132,12 +130,141 @@ var Baddie = me.ObjectEntity.extend({
             me.game.world.sort();
 
             me.state.current().updateLayerVisibility(me.state.current().overworld);
-
         }
+    },
+    update: function(dt) {
+        this.parent(dt);
+        this.updateMovement();
+        this.checkBulletCollision();
         return true;
     }
 
 });
+
+var Fish = Baddie.extend({
+    init: function(x, y, settings) {
+        settings.image = 'robut';
+        settings.spritewidth = 80;
+        settings.spriteheight = 80;
+
+        this.patrolWidth = settings.width;
+        settings.height = 80;
+        settings.width = 80;
+        this.parent( x, y, settings );
+
+        this.startX = this.pos.x;
+        this.baseSpeed = this.speed = 2.0;
+        this.setVelocity( 5, 15 );
+
+
+        this.renderable.animationspeed = 70;
+    },
+
+    update: function(dt) {
+        this.parent(dt);
+
+        this.vel.x = this.speed;
+
+        if(this.pos.x > this.startX + this.patrolWidth){
+            this.pos.x = this.startX + this.patrolWidth;
+            this.speed = this.baseSpeed* -1;
+        }
+        if(this.pos.x < this.startX ){
+            this.pos.x = this.startX;
+            this.speed = this.baseSpeed;
+        }
+
+        return true;
+    }
+
+});
+
+var Wasp = Baddie.extend({
+    init: function(x, y, settings) {
+        settings.image = 'robut';
+        settings.spritewidth = 80;
+        settings.spriteheight = 80;
+
+        this.patrolWidth = settings.width;
+        settings.height = 80;
+        settings.width = 80;
+        this.parent( x, y, settings );
+
+        this.startX = this.pos.x;
+        this.baseSpeed = this.speed = 3.0;
+        this.setVelocity( 5, 15 );
+        this.gravity = 0;
+
+        this.renderable.animationspeed = 70;
+    },
+
+    update: function(dt) {
+        this.parent(dt);
+
+        this.vel.x = this.speed;
+
+        if(this.pos.x > this.startX + this.patrolWidth){
+            this.pos.x = this.startX + this.patrolWidth;
+            this.speed = this.baseSpeed* -1;
+        }
+        if(this.pos.x < this.startX ){
+            this.pos.x = this.startX;
+            this.speed = this.baseSpeed;
+        }
+
+        return true;
+    }
+
+});
+
+var Crab = Baddie.extend({
+    init: function(x, y, settings) {
+        settings.image = 'robut';
+        settings.spritewidth = 80;
+        settings.spriteheight = 80;
+
+        this.patrolWidth = settings.width;
+        settings.height = 80;
+        settings.width = 80;
+        this.parent( x, y, settings );
+
+        this.renderable.animationspeed = 70;
+    },
+
+    update: function(dt) {
+        this.parent(dt);
+        this.updateMovement();
+        this.checkBulletCollision();
+        return true;
+    }
+
+});
+
+var Cat = Baddie.extend({
+    init: function(x, y, settings) {
+        settings.image = 'robut';
+        settings.spritewidth = 80;
+        settings.spriteheight = 80;
+
+        this.patrolWidth = settings.width;
+        settings.height = 80;
+        settings.width = 80;
+        this.parent( x, y, settings );
+
+        this.renderable.animationspeed = 70;
+    },
+
+    update: function(dt) {
+        this.parent(dt);
+        this.updateMovement();
+        this.checkBulletCollision();
+        return true;
+    }
+
+});
+
+
+
 
 var Player = me.ObjectEntity.extend({
     init: function(x, y, settings) {
@@ -153,7 +280,9 @@ var Player = me.ObjectEntity.extend({
         this.hitVelX = 0;
         this.image =  me.loader.getImage('player2');
         this.necroMode = true;
+        this.overworld = false;
 
+        this.z = 100;
 
         var shape = this.getShape();
         shape.pos.x = 44;
@@ -167,7 +296,7 @@ var Player = me.ObjectEntity.extend({
 
         this.animationSuffix = "";
 
-        this.setVelocity( 5, 15 );
+        this.setVelocity( 5, 16 );
         this.setFriction( 0.4, 0 );
         this.direction = 1;
 
@@ -213,8 +342,12 @@ var Player = me.ObjectEntity.extend({
     },
 
     toUnderworld: function(){
-
+        this.overworld = true;
         this.necroMode = false;
+        this.setVelocity( 7, 20 );
+        this.setFriction( 0.7, 0 );
+
+        this.renderable.animationspeed = 165;
         if(this.pickups > 0){
             for( var i=0; i<this.pickups; i++){
                 var b = new EnterPortalParticle(this.pos.x, this.pos.y, {});
@@ -255,7 +388,7 @@ var Player = me.ObjectEntity.extend({
 
         // TODO acceleration
         if (me.input.isKeyPressed('left'))  {
-            this.vel.x = -55.5;
+            this.vel.x = -25.5;
             this.flipX(true);
             this.direction = -1;
             if( ! this.renderable.isCurrentAnimation("walk" + this.animationSuffix) ){
@@ -287,13 +420,13 @@ var Player = me.ObjectEntity.extend({
 
         if( me.input.isKeyPressed('up')) {
             if(!this.jumping && !this.falling){
-                this.vel.y = -29;
+                this.vel.y = -40;
                 this.jumping = true;
                 self.renderable.setCurrentAnimation("jump" + this.animationSuffix);
             }
             else if((this.jumping || this.falling) && !this.doubleJumped){
                 this.doubleJumped = true;
-                this.vel.y = -29;
+                this.vel.y = -40;
                 self.renderable.setCurrentAnimation("double_jump" + this.animationSuffix);
             }
         }
@@ -301,7 +434,7 @@ var Player = me.ObjectEntity.extend({
         var col = me.game.world.collide(this);
         //console.log(col);
 
-        if(this.hitTimer <= 0 && this.collisionTimer <=0 && col && col.obj.baddie ) {
+        if(this.hitTimer <= 0 && this.collisionTimer <=0 && col && col.obj.baddie && (this.overworld == col.obj.overworld) ) {
 
             //TODO: change character to normal texture here!
             //TODO: if pickups <= 0, die!
@@ -342,10 +475,10 @@ var EnterPortalParticle = me.ObjectEntity.extend({
      */
     init: function (x, y, settings) {
         settings.image = settings.image || 'pickup';
-        settings.spritewidth =  64;
-        settings.spriteheight = 64;
-        settings.height = 64;
-        settings.width = 64;
+        settings.spritewidth =  69;
+        settings.spriteheight = 117;
+        settings.width = 60;
+        settings.height = 60;
         // call the parent constructor
         this.parent(x, y , settings);
 
@@ -386,10 +519,10 @@ var OnHitPickup = me.ObjectEntity.extend({
     init: function (x, y, settings) {
         settings.collidable = true;
         settings.image = settings.image || 'pickup';
-        settings.spritewidth =  64;
-        settings.spriteheight = 64;
-        settings.height = 64;
-        settings.width = 64;
+        settings.spritewidth =  69;
+        settings.spriteheight = 117;
+        settings.width = 60;
+        settings.height = 60;
         // call the parent constructor
         this.parent(x, y , settings);
 
@@ -450,16 +583,24 @@ var Pickup = me.ObjectEntity.extend({
     init: function (x, y, settings) {
         settings.collidable = true;
         settings.image = settings.image || 'pickup';
-        settings.spritewidth =  64;
-        settings.spriteheight = 64;
-        settings.height = 64;
-        settings.width = 64;
+        settings.spritewidth =  69;
+        settings.spriteheight = 117;
+        settings.width = 60;
+        settings.height = 100;
         // call the parent constructor
         this.parent(x, y , settings);
+
+        //var shape = this.getShape();
+        //shape.pos.x = 0;
+        //shape.pos.y = 40;
 
         this.gravity = 0;
         this.pickup = true;
         this.z = 300;
+        this.overworld = true;
+
+        // Hack...
+        me.state.current().pickups.push(this);
 
         // set the renderable position to center
         this.anchorPoint.set(0.5, 0.5);
@@ -469,13 +610,16 @@ var Pickup = me.ObjectEntity.extend({
         this.parent(dt);
         this.updateMovement();
 
-        var col = me.game.world.collide(this);
-        //console.log(col);
-        if(col && col.obj.player ) {
-            me.state.current().player.pickups++;
-            this.collidable = false;
-            me.game.world.removeChild(this);
-            console.log("collectable collide " + me.state.current().player.pickups);
+        if(me.state.current().player.overworld){
+            var col = me.game.world.collide(this);
+            //console.log(col);
+            if(col && col.obj.player ) {
+                me.state.current().pickups.remove(this);
+                me.state.current().player.pickups++;
+                this.collidable = false;
+                me.game.world.removeChild(this);
+                console.log("collectable collide " + me.state.current().player.pickups);
+            }
         }
 
         return true;
@@ -550,6 +694,7 @@ var PlayScreen = me.ScreenObject.extend({
     goToLevel: function( level ) {
         if( !this.overworld ) {
             this.baddies = [];
+            this.pickups = [];
             this.overworld = true;
             me.levelDirector.loadLevel( level );
             me.state.current().changeLevel( level );
@@ -572,15 +717,23 @@ var PlayScreen = me.ScreenObject.extend({
             var m = baddie.overworld && overworld || (!baddie.overworld && !overworld);
             if(m) {
                 baddie.renderable.alpha = .5;
-                baddie.collidable = false;
-                baddie.gravity = 0;
-                baddie.renderable.animationpause = true;
+               // baddie.collidable = false;
             }
             else {
                 baddie.renderable.alpha = 1;
-                baddie.collidable = true;
-                baddie.gravity = 1;
-                baddie.renderable.animationpause = false;
+                //baddie.collidable = true;
+            }
+        });
+
+        this.pickups.forEach(function(pickup) {
+            var m = pickup.overworld && overworld || (!pickup.overworld && !overworld);
+            if(m) {
+                pickup.renderable.alpha = .5;
+                //pickup.collidable = false;
+            }
+            else {
+                pickup.renderable.alpha = 1;
+                //pickup.collidable = true;
             }
         });
 

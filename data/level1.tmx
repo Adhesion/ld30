@@ -58,17 +58,9 @@
   </data>
  </layer>
  <objectgroup name="entities" width="50" height="18">
-  <object name="pickup" x="1213" y="420" width="48" height="48"/>
   <object name="baddie" x="69" y="347" width="72" height="72"/>
-  <object name="baddie" x="1694" y="377" width="96" height="96">
-   <properties>
-    <property name="overworld" value="1"/>
-   </properties>
-  </object>
-  <object name="baddie" x="1539" y="398" width="72" height="72"/>
-  <object name="pickup" x="1947" y="422" width="48" height="48"/>
-  <object name="pickup" x="1079" y="419" width="48" height="48"/>
-  <object name="pickup" x="1393" y="417" width="48" height="48"/>
+  <object name="fish" x="1467" y="401" width="536" height="77"/>
+  <object name="pickup" x="1466" y="313" width="72" height="120"/>
   <object name="player" x="578" y="329" width="144" height="144"/>
   <object name="underworld" x="2142" y="325" width="144" height="144"/>
   <object name="levelchanger" x="359" y="327" width="144" height="144">
@@ -76,6 +68,9 @@
     <property name="toLevel" value="level2"/>
    </properties>
   </object>
+  <object name="pickup" x="1126" y="316" width="72" height="120"/>
+  <object name="pickup" x="1923" y="318" width="72" height="120"/>
+  <object name="wasp" x="1466" y="134" width="536" height="77"/>
  </objectgroup>
  <layer name="foreground_underworld" width="50" height="18">
   <data encoding="base64">
