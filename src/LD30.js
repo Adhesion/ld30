@@ -219,11 +219,13 @@ var PlayScreen = me.ScreenObject.extend({
                 baddie.renderable.alpha = .5;
                 baddie.collidable = false;
                 baddie.gravity = 0;
+                baddie.renderable.animationpause = true;
             }
             else {
                 baddie.renderable.alpha = 1;
                 baddie.collidable = true;
                 baddie.gravity = 1;
+                baddie.renderable.animationpause = false;
             }
         });
 
