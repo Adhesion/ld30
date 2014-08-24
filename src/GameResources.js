@@ -25,7 +25,6 @@ var GameResources = [
     // Player
     _Image( "zap" ),
     _Image( "player" ),
-    _Image( "player2" ),
 
     _Image( "robut" ),
     _Image( "pickup" ),

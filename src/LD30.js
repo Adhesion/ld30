@@ -121,12 +121,15 @@ var Baddie = me.ObjectEntity.extend({
 var Player = me.ObjectEntity.extend({
     init: function(x, y, settings) {
         settings.image        = settings.image        || 'player';
+        settings.spritewidth =  40*3;
+        settings.spriteheight = 48*3;
+        settings.height = 40*3;
+        settings.width = 48*3;
         this.parent( x, y, settings );
         this.alwaysUpdate = true;
         this.player = true;
         this.hitTimer = 0;
         this.hitVelX = 0;
-
         this.image =  me.loader.getImage('player2');
 
 
@@ -140,6 +143,8 @@ var Player = me.ObjectEntity.extend({
         this.collisionTimer = 0;
         this.doubleJumped = false;
 
+        this.animationSuffix = "";
+
         this.setVelocity( 5, 15 );
         this.setFriction( 0.4, 0 );
         this.direction = 1;
@@ -152,21 +157,29 @@ var Player = me.ObjectEntity.extend({
         me.game.viewport.follow( this.followPos, me.game.viewport.AXIS.BOTH );
         me.game.viewport.setDeadzone( me.game.viewport.width / 10, 1 );
 
-        this.renderable.animationspeed = 70;
-        this.renderable.addAnimation( "idle", [ 0, 1, 2, 3 ] );
-        this.renderable.addAnimation( "jump", [ 4 ] );
-        this.renderable.addAnimation( "jump_extra", [ 5 ] );
-        this.renderable.addAnimation( "fall", [ 6 ] );
-        this.renderable.addAnimation( "walk", [ 7, 8, 9, 10 ] );
-        this.renderable.addAnimation( "attack", [ 11 ] );
-        this.renderable.addAnimation( "wallstuck", [ 12 ] );
-        this.renderable.addAnimation( "buttstomp", [ 13 ] );
-        this.renderable.addAnimation( "impact", [ 14, 14, 14, 14 ] );
-        this.renderable.addAnimation( "die", [ 15 ] );
-        this.renderable.addAnimation( "swim_idle", [ 16, 17, 18, 19 ] );
-        this.renderable.addAnimation( "swim", [ 20, 21, 22, 23 ] );
-        this.renderable.addAnimation( "hidden", [ 24 ] );
-        this.renderable.setCurrentAnimation("idle");
+        this.renderable.animationspeed = 150;
+        this.renderable.addAnimation( "idle", [ 0, 1, 2 ] );
+        this.renderable.addAnimation( "double_jump", [ 10 , 9  ] );
+        this.renderable.addAnimation( "jump", [ 9 ] );
+        this.renderable.addAnimation( "jump_extra", [ 9 ] );
+        this.renderable.addAnimation( "fall", [ 10 ] );
+        this.renderable.addAnimation( "walk", [ 4, 5, 6, 7 ] );
+        this.renderable.addAnimation( "shoot", [ 3 ] );
+        this.renderable.addAnimation( "shoot_jump", [ 8 ] );
+        this.renderable.addAnimation( "hit", [ 11 , 11, 11] );
+
+        var offset = 12;
+        this.renderable.addAnimation( "idle_normal", [ 0 + offset, 1 + offset, 2 + offset ] );
+        this.renderable.addAnimation( "jump_normal", [ 9 + offset ] );
+        this.renderable.addAnimation( "double_jump_normal", [ 10 + offset, 9 + offset ] );
+        this.renderable.addAnimation( "jump_extra_normal", [ 9 + offset ] );
+        this.renderable.addAnimation( "fall_normal", [ 10 + offset ] );
+        this.renderable.addAnimation( "walk_normal", [ 4 + offset, 5 + offset, 6 + offset, 7 + offset ] );
+        this.renderable.addAnimation( "shoot_normal", [ 3 + offset ] );
+        this.renderable.addAnimation( "shoot_jump_normal", [ 8 + offset ] );
+        this.renderable.addAnimation( "hit_normal", [ 11 + offset , 11 + offset, 11 + offset] );
+
+        this.renderable.setCurrentAnimation("idle" + this.animationSuffix);
 
         me.input.bindKey(me.input.KEY.LEFT,  "left");
         me.input.bindKey(me.input.KEY.RIGHT, "right");
@@ -180,6 +193,7 @@ var Player = me.ObjectEntity.extend({
     update: function(dt) {
         var self = this;
         this.parent(dt);
+
 
         if(this.collisionTimer > 0){
             this.collisionTimer-=dt;
@@ -197,34 +211,43 @@ var Player = me.ObjectEntity.extend({
             this.vel.x = -55.5;
             this.flipX(true);
             this.direction = -1;
-            if( ! this.renderable.isCurrentAnimation("walk") ){
-                this.renderable.setCurrentAnimation("walk", function() {
-                    self.renderable.setCurrentAnimation("idle");
+            if( ! this.renderable.isCurrentAnimation("walk" + this.animationSuffix) ){
+                this.renderable.setCurrentAnimation("walk" + this.animationSuffix, function() {
+                    self.renderable.setCurrentAnimation("idle" + self.animationSuffix);
                 })
             }
         } else if (me.input.isKeyPressed('right')) {
             this.vel.x = 25.5;
             this.flipX(false);
             this.direction = 1;
-            if( ! this.renderable.isCurrentAnimation("walk") ){
-                this.renderable.setCurrentAnimation("walk", function() {
-                    self.renderable.setCurrentAnimation("idle");
+            if( ! this.renderable.isCurrentAnimation("walk" + this.animationSuffix) ){
+                this.renderable.setCurrentAnimation("walk" + this.animationSuffix, function() {
+                    self.renderable.setCurrentAnimation("idle" + self.animationSuffix);
                 })
             }
         }
 
+        if(this.falling && this.vel.y > 0){
+            this.renderable.setCurrentAnimation("fall" + this.animationSuffix);
+        }
+
         if(!this.falling && this.vel.y == 0){
             this.doubleJumped = false;
+            if(!me.input.isKeyPressed('right') && !me.input.isKeyPressed('left') && ! this.renderable.isCurrentAnimation("idle" + this.animationSuffix)){
+                this.renderable.setCurrentAnimation("idle" + this.animationSuffix);
+            }
         }
 
         if( me.input.isKeyPressed('up')) {
             if(!this.jumping && !this.falling){
                 this.vel.y = -29;
                 this.jumping = true;
+                self.renderable.setCurrentAnimation("jump" + this.animationSuffix);
             }
             else if((this.jumping || this.falling) && !this.doubleJumped){
                 this.doubleJumped = true;
                 this.vel.y = -29;
+                self.renderable.setCurrentAnimation("double_jump" + this.animationSuffix);
             }
         }
 
@@ -246,6 +269,8 @@ var Player = me.ObjectEntity.extend({
                 this.pickups = 0;
             }
 
+            this.animationSuffix = "_normal";
+
             this.hitTimer = 250;
             this.collisionTimer = 1000;
             this.renderable.flicker(1000);
@@ -256,8 +281,8 @@ var Player = me.ObjectEntity.extend({
                 this.vel.x = this.hitVelX = -50;
             }
             this.vel.y = -20;
-            this.renderable.setCurrentAnimation("impact", function() {
-                self.renderable.setCurrentAnimation("idle");
+            this.renderable.setCurrentAnimation("hit" + this.animationSuffix, function() {
+                self.renderable.setCurrentAnimation("idle" + self.animationSuffix);
             });
         }
 
