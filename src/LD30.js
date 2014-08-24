@@ -51,6 +51,7 @@ var LD30 = function() {
 var LevelChanger = me.ObjectEntity.extend({
     init: function(x, y, settings) {
         // TODO: Just bake image or attach to obj?
+        this.toLevel = settings.toLevel;
         this.parent( x, y, settings );
         this.gravity = 0;
         this.collidable = true;
@@ -60,8 +61,8 @@ var LevelChanger = me.ObjectEntity.extend({
         this.parent(dt);
         this.updateMovement();
         var col = me.game.world.collide(this);
-        if(col && col.obj == me.state.current().player ) {
-            me.state.current().goToLevel("level1");
+        if(col && col.obj == me.state.current().player  ) {
+            me.state.current().goToLevel(this.toLevel);
         }
     }
 });
@@ -539,6 +540,7 @@ var PlayScreen = me.ScreenObject.extend({
     },
 
     toUnderworld: function() {
+        console.log("to underworld: " +  this.overworld );
         if( this.overworld ) {
             this.overworld = false;
             this.updateLayerVisibility(this.overworld);
@@ -546,10 +548,12 @@ var PlayScreen = me.ScreenObject.extend({
     },
 
     goToLevel: function( level ) {
-        this.baddies = [];
-        this.overworld = true;
-        me.levelDirector.loadLevel( level );
-        me.state.current().changeLevel( level );
+        if( !this.overworld ) {
+            this.baddies = [];
+            this.overworld = true;
+            me.levelDirector.loadLevel( level );
+            me.state.current().changeLevel( level );
+        }
     },
 
 
