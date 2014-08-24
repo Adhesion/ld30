@@ -56,6 +56,10 @@ var Baddie = me.ObjectEntity.extend({
         this.setFriction( 0.4, 0 );
         this.direction = 1;
         this.collidable = true;
+        this.overworld = settings.overworld ? true : false;
+
+        // Hack...
+        me.state.current().baddies.push(this);
 
         this.renderable.animationspeed = 70
     },
@@ -66,7 +70,6 @@ var Baddie = me.ObjectEntity.extend({
         var col = me.game.world.collide(this);
         if(col && col.obj.bullet ) {
             // TODO : Do something awesome here.
-            me.game.world.removeChild(this);
         }
         return true;
     },
@@ -148,20 +151,6 @@ var Player = me.ObjectEntity.extend({
     }
 })
 
-function updateLayerVisibility(overworld) {
-    var level = me.game.currentLevel;
-    level.getLayers().forEach(function(layer){
-        if( layer.name.match( /overworld/ ) ) {
-            layer.alpha = overworld ? 1 : 0;
-        }
-        else if( layer.name.match( /underworld/ ) ) {
-            layer.alpha = overworld ? 0 : 1;
-        }
-    }, this);
-    me.game.repaint();
-    return;
-}
-
 var Bullet = me.ObjectEntity.extend({
     init: function(x, y, settings) {
         settings = settings || {};
@@ -204,6 +193,7 @@ var Bullet = me.ObjectEntity.extend({
 var PlayScreen = me.ScreenObject.extend({
     init: function() {
         this.parent( true );
+        this.baddies = [];
         me.input.bindKey(me.input.KEY.l, "type_l");
         me.input.bindKey(me.input.KEY.L, "type_l");
         me.input.bindKey(me.input.KEY.SPACE, "shoot");
@@ -212,10 +202,38 @@ var PlayScreen = me.ScreenObject.extend({
 
     },
 
+    updateLayerVisibility: function(overworld) {
+        var level = me.game.currentLevel;
+        level.getLayers().forEach(function(layer){
+            if( layer.name.match( /overworld/ ) ) {
+                layer.alpha = overworld ? 1 : 0;
+            }
+            else if( layer.name.match( /underworld/ ) ) {
+                layer.alpha = overworld ? 0 : 1;
+            }
+        }, this);
+
+        this.baddies.forEach(function(baddie) {
+            var m = baddie.overworld && overworld || (!baddie.overworld && !overworld);
+            if(m) {
+                baddie.renderable.alpha = .5;
+                baddie.collidable = false;
+                baddie.gravity = 0;
+            }
+            else {
+                baddie.renderable.alpha = 1;
+                baddie.collidable = true;
+                baddie.gravity = 1;
+            }
+        });
+
+        me.game.repaint();
+    },
+
     keyDown: function( action ) {
         if(action == "type_l") {
             this.overworld = !this.overworld;
-            updateLayerVisibility(this.overworld);
+            this.updateLayerVisibility(this.overworld);
         }
         else if(action == "shoot") {
             var b = new Bullet(this.player.pos.x, this.player.pos.y, { direction: this.player.direction });
@@ -237,7 +255,7 @@ var PlayScreen = me.ScreenObject.extend({
     /** Update the level display & music. Called on all level changes. */
     changeLevel: function( level ) {
         // TODO: Makethis track the real variable...
-        updateLayerVisibility(this.overworld);
+        this.updateLayerVisibility(this.overworld);
         // this only gets called on start?
         me.game.world.sort();
         me.game.viewport.fadeOut( '#000000', 1000, function() {
