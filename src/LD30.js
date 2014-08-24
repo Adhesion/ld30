@@ -79,6 +79,7 @@ var Underworld = me.ObjectEntity.extend({
         var col = me.game.world.collide(this);
         if(col && col.obj == me.state.current().player ) {
             me.state.current().toUnderworld();
+            me.state.current().player.toUnderworld();
         }
     }
 });
@@ -108,13 +109,21 @@ var Baddie = me.ObjectEntity.extend({
         this.parent(dt);
         this.updateMovement();
         var col = me.game.world.collide(this);
-        if(col && col.obj.bullet ) {
-            // TODO : Do something awesome here.
-            this.renderable.flicker(2000);
-            this.renderable.animationpause = true;
+        if(col && col.obj.bullet && !this.overworld ) {
+            //this.renderable.flicker(2000);
+            //this.renderable.animationpause = true;
+
+            //TODO: spawn death particle?
+            this.collidable = false;
+            me.game.world.removeChild(this);
+
+            var b = new Pickup(this.pos.x, this.pos.y, {});
+            me.game.world.addChild(b);
+
+            me.state.current().baddies.remove(this);
         }
         return true;
-    },
+    }
 
 });
 
@@ -131,6 +140,7 @@ var Player = me.ObjectEntity.extend({
         this.hitTimer = 0;
         this.hitVelX = 0;
         this.image =  me.loader.getImage('player2');
+        this.necroMode = true;
 
 
         var shape = this.getShape();
@@ -188,6 +198,28 @@ var Player = me.ObjectEntity.extend({
 
         me.input.bindKey(me.input.KEY.A,    "left");
         me.input.bindKey(me.input.KEY.D,    "right");
+    },
+
+    toUnderworld: function(){
+
+        this.necroMode = false;
+        if(this.pickups > 0){
+            for( var i=0; i<this.pickups; i++){
+                var b = new EnterPortalParticle(this.pos.x, this.pos.y, {});
+                me.game.world.addChild(b);
+            }
+            me.game.world.sort();
+            this.pickups = 0;
+        }
+        this.animationSuffix = "_normal";
+    },
+
+    shoot: function(){
+        if(this.necroMode){
+            var b = new Bullet(this.pos.x, this.pos.y, { direction: this.direction });
+            me.game.world.addChild(b);
+            me.game.world.sort();
+        }
     },
 
     update: function(dt) {
@@ -261,8 +293,7 @@ var Player = me.ObjectEntity.extend({
 
             //TODO: change character to normal texture here!
             //TODO: if pickups <= 0, die!
-
-            console.log("pickups: " + this.pickups);
+            this.necroMode = false;
             if(this.pickups > 0){
                 for( var i=0; i<this.pickups; i++){
                     var b = new OnHitPickup(this.pos.x, this.pos.y, {});
@@ -271,7 +302,6 @@ var Player = me.ObjectEntity.extend({
                 me.game.world.sort();
                 this.pickups = 0;
             }
-
             this.animationSuffix = "_normal";
 
             this.hitTimer = 250;
@@ -293,6 +323,49 @@ var Player = me.ObjectEntity.extend({
         return true;
     }
 })
+
+var EnterPortalParticle = me.ObjectEntity.extend({
+    /**
+     * constructor
+     */
+    init: function (x, y, settings) {
+        settings.image = settings.image || 'pickup';
+        settings.spritewidth =  64;
+        settings.spriteheight = 64;
+        settings.height = 64;
+        settings.width = 64;
+        // call the parent constructor
+        this.parent(x, y , settings);
+
+        this.pickup = true;
+        this.vel.x = Math.random() * 20-10;
+        this.vel.y = -10 - Math.random()*10;
+        this.setFriction( 0.1, 0 );
+        this.life = 2000;
+        //
+        this.z = 300;
+        this.collidable = false;
+
+        // set the renderable position to center
+        this.anchorPoint.set(0.5, 0.5);
+    },
+
+    update: function(dt) {
+        this.parent(dt);
+        this.updateMovement();
+
+        this.life -=dt;
+
+        if(this.life <=0){
+            this.collidable = false;
+            me.game.world.removeChild(this);
+            return true;
+        }
+
+        return true;
+    }
+});
+
 
 var OnHitPickup = me.ObjectEntity.extend({
     /**
@@ -365,12 +438,17 @@ var Pickup = me.CollectableEntity.extend({
     init: function (x, y, settings) {
         settings.collidable = true;
         settings.image = settings.image || 'pickup';
+        settings.spritewidth =  64;
+        settings.spriteheight = 64;
+        settings.height = 64;
+        settings.width = 64;
         // call the parent constructor
         this.parent(x, y , settings);
 
         this.gravity = 0;
-
+        this.overworld = false;
         this.pickup = true;
+        this.z = 300;
 
         // set the renderable position to center
         this.anchorPoint.set(0.5, 0.5);
@@ -439,6 +517,7 @@ var PlayScreen = me.ScreenObject.extend({
         this.parent( true );
         me.input.bindKey(me.input.KEY.SPACE, "shoot");
         this.baddies = [];
+        this.pickups = [];
         this.overworld = true;
         this.subscription = me.event.subscribe(me.event.KEYDOWN, this.keyDown.bind(this));
 
@@ -491,9 +570,7 @@ var PlayScreen = me.ScreenObject.extend({
 
     keyDown: function( action ) {
         if(action == "shoot") {
-            var b = new Bullet(this.player.pos.x, this.player.pos.y, { direction: this.player.direction });
-            me.game.world.addChild(b);
-            me.game.world.sort();
+            this.player.shoot();
         }
     },
 
