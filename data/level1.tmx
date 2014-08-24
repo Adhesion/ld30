@@ -71,7 +71,11 @@
   <object name="pickup" x="1393" y="417" width="48" height="48"/>
   <object name="player" x="578" y="329" width="144" height="144"/>
   <object name="underworld" x="2142" y="325" width="144" height="144"/>
-  <object name="levelchanger" x="359" y="327" width="144" height="144"/>
+  <object name="levelchanger" x="359" y="327" width="144" height="144">
+   <properties>
+    <property name="toLevel" value="level2"/>
+   </properties>
+  </object>
  </objectgroup>
  <layer name="foreground_underworld" width="50" height="18">
   <data encoding="base64">
