@@ -135,8 +135,8 @@ var Player = me.ObjectEntity.extend({
 
         var shape = this.getShape();
         shape.pos.x = 44;
-        shape.pos.y = 59;
-        shape.resize(88, 76);
+        shape.pos.y = 0;
+        shape.resize(70, 110);
         me.state.current().player = this;
 
         this.pickups = 0;
@@ -154,7 +154,7 @@ var Player = me.ObjectEntity.extend({
             this.pos.y + this.centerOffsetY
         );
 
-        me.game.viewport.follow( this.followPos, me.game.viewport.AXIS.BOTH );
+        me.game.viewport.follow( this.pos, me.game.viewport.AXIS.BOTH );
         me.game.viewport.setDeadzone( me.game.viewport.width / 10, 1 );
 
         this.renderable.animationspeed = 150;
@@ -194,6 +194,9 @@ var Player = me.ObjectEntity.extend({
         var self = this;
         this.parent(dt);
 
+
+        this.followPos.x = this.pos.x + this.centerOffsetX;
+        this.followPos.y = this.pos.y + this.centerOffsetY;
 
         if(this.collisionTimer > 0){
             this.collisionTimer-=dt;

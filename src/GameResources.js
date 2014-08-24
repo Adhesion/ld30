@@ -31,6 +31,7 @@ var GameResources = [
 
     //_Audio( "beep", "data/" ),
     _Image( "mapshit1"),
+    _Image( "map_normal1"),
     _Image( "collision_tiles" ),
     _Level( "level1" )
 ];
