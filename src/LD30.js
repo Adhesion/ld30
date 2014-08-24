@@ -87,7 +87,7 @@ var Underworld = me.ObjectEntity.extend({
 
 var Baddie = me.ObjectEntity.extend({
     init: function(x, y, settings) {
-        settings.image = settings.image || 'robut';
+        settings.image = 'robut';
         settings.spritewidth = 80;
         settings.spriteheight = 80;
         this.parent( x, y, settings );
@@ -102,7 +102,9 @@ var Baddie = me.ObjectEntity.extend({
         // Hack...
         me.state.current().baddies.push(this);
 
-        this.renderable.animationspeed = 70
+        this.renderable.animationspeed = 70;
+
+        console.log("baddie added ");
     },
 
     update: function(dt) {
@@ -113,14 +115,23 @@ var Baddie = me.ObjectEntity.extend({
             //this.renderable.flicker(2000);
             //this.renderable.animationpause = true;
 
+            col.obj.die();
+            me.state.current().baddies.remove(this);
+
             //TODO: spawn death particle?
             this.collidable = false;
             me.game.world.removeChild(this);
 
-            var b = new Pickup(this.pos.x, this.pos.y, {});
-            me.game.world.addChild(b);
+            var p = new Pickup(this.pos.x, this.pos.y-50, {});
+            me.game.world.addChild(p);
 
-            me.state.current().baddies.remove(this);
+            var b = new Baddie(this.pos.x, this.pos.y, { overworld:1, width:80, height:80});
+            b.z = 300;
+            me.game.world.addChild(b);
+            me.game.world.sort();
+
+            me.state.current().updateLayerVisibility(me.state.current().overworld);
+
         }
         return true;
     }
@@ -431,7 +442,7 @@ var OnHitPickup = me.ObjectEntity.extend({
 });
 
 
-var Pickup = me.CollectableEntity.extend({
+var Pickup = me.ObjectEntity.extend({
     /**
      * constructor
      */
@@ -446,7 +457,6 @@ var Pickup = me.CollectableEntity.extend({
         this.parent(x, y , settings);
 
         this.gravity = 0;
-        this.overworld = false;
         this.pickup = true;
         this.z = 300;
 
@@ -492,6 +502,11 @@ var Bullet = me.ObjectEntity.extend({
 
     onCollision: function() {
 
+    },
+
+    die: function(){
+        this.collidable = false;
+        me.game.world.removeChild(this);
     },
 
     update: function( dt ) {
