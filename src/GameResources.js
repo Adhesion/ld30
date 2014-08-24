@@ -27,7 +27,15 @@ var GameResources = [
     _Image( "player" ),
 
     _Image( "robut" ),
+    _Image( "cat" ),
+    _Image( "cat_skel" ),
+
     _Image( "pickup" ),
+    _Image( "baddieBullet" ),
+    _Image( "waspBullet" ),
+    _Image( "doublejump" ),
+    _Image( "dembones" ),
+    _Image( "explode" ),
 
     //_Audio( "beep", "data/" ),
     _Image( "mapshit1"),

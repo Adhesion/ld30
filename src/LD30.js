@@ -168,10 +168,14 @@ var Fish = Baddie.extend({
         if(this.pos.x > this.startX + this.patrolWidth){
             this.pos.x = this.startX + this.patrolWidth;
             this.speed = this.baseSpeed* -1;
+            this.flipX(true);
+            this.direction = -1;
         }
         if(this.pos.x < this.startX ){
             this.pos.x = this.startX;
             this.speed = this.baseSpeed;
+            this.flipX(false);
+            this.direction = 1;
         }
 
         return true;
@@ -194,22 +198,48 @@ var Wasp = Baddie.extend({
         this.baseSpeed = this.speed = 3.0;
         this.setVelocity( 5, 15 );
         this.gravity = 0;
-
+        this.shootCooldown = 0;
         this.renderable.animationspeed = 70;
+        this.pausePatrol = 0;
     },
 
     update: function(dt) {
         this.parent(dt);
 
-        this.vel.x = this.speed;
 
+        if(this.shootCooldown > 0) this.shootCooldown-=dt;
+
+        if(this.shootCooldown <= 0 && !me.state.current().player.overworld){
+            var d = me.state.current().player.pos.x - this.pos.x;
+            if( (Math.abs(d) < 350 && Math.abs(d) > 150) && ((d > 0 && this.direction > 0)||(d < 0 && this.direction < 0))){
+                this.pausePatrol = 500;
+                this.shootCooldown = 2000;
+                console.log("shoot!");
+                var b = new  WaspBullet(this.pos.x, this.pos.y, {direction:this.direction });
+                me.game.world.addChild(b);
+                me.game.world.sort();
+            }
+        }
+
+        if(this.pausePatrol > 0){
+            this.pausePatrol-=dt;
+            return true;
+        }
+
+        this.vel.x = this.speed;
         if(this.pos.x > this.startX + this.patrolWidth){
             this.pos.x = this.startX + this.patrolWidth;
             this.speed = this.baseSpeed* -1;
+            this.pausePatrol = 500;
+            this.flipX(true);
+            this.direction = -1;
         }
         if(this.pos.x < this.startX ){
             this.pos.x = this.startX;
             this.speed = this.baseSpeed;
+            this.pausePatrol = 500;
+            this.flipX(false);
+            this.direction = 1;
         }
 
         return true;
@@ -228,13 +258,47 @@ var Crab = Baddie.extend({
         settings.width = 80;
         this.parent( x, y, settings );
 
+        this.startX = this.pos.x;
+        this.baseSpeed = this.speed = 1.5;
+        this.sprintTime = 0;
+        this.setVelocity( 5, 15 );
+
+
         this.renderable.animationspeed = 70;
     },
 
     update: function(dt) {
         this.parent(dt);
-        this.updateMovement();
-        this.checkBulletCollision();
+
+        var d = me.state.current().player.pos.x - this.pos.x;
+        if( (Math.abs(d) < 300) && ((d > 0 && this.direction > 0)||(d < 0 && this.direction < 0))){
+            this.sprintTime = 100;
+        }
+
+        if(this.sprintTime > 0){
+            this.sprintTime -=dt;
+            this.vel.x = this.speed*3;
+        }else{
+            this.vel.x = this.speed;
+        }
+
+
+
+        if(this.pos.x > this.startX + this.patrolWidth){
+            this.pos.x = this.startX + this.patrolWidth;
+            this.speed = this.baseSpeed* -1;
+            this.sprintTime = 0;
+            this.flipX(true);
+            this.direction = -1;
+        }
+        if(this.pos.x < this.startX ){
+            this.pos.x = this.startX;
+            this.speed = this.baseSpeed;
+            this.sprintTime = 0;
+            this.flipX(false);
+            this.direction = 1;
+        }
+
         return true;
     }
 
@@ -251,13 +315,53 @@ var Cat = Baddie.extend({
         settings.width = 80;
         this.parent( x, y, settings );
 
+        this.startX = this.pos.x;
+        this.baseSpeed = this.speed = 1.0;
+        this.setVelocity( 5, 15 );
+        this.shootCooldown = 0;
         this.renderable.animationspeed = 70;
+        this.pausePatrol = 0;
     },
 
     update: function(dt) {
         this.parent(dt);
-        this.updateMovement();
-        this.checkBulletCollision();
+
+
+        if(this.shootCooldown > 0) this.shootCooldown-=dt;
+
+        if(this.shootCooldown <= 0&& !me.state.current().player.overworld){
+            var d = me.state.current().player.pos.x - this.pos.x;
+            if( (Math.abs(d) < 350 && Math.abs(d) > 150) && ((d > 0 && this.direction > 0)||(d < 0 && this.direction < 0))){
+                this.pausePatrol = 500;
+                this.shootCooldown = 2000;
+                console.log("shoot!");
+                var b = new  CatBullet(this.pos.x, this.pos.y, {direction:this.direction });
+                me.game.world.addChild(b);
+                me.game.world.sort();
+            }
+        }
+
+        if(this.pausePatrol > 0){
+            this.pausePatrol-=dt;
+            return true;
+        }
+
+        this.vel.x = this.speed;
+        if(this.pos.x > this.startX + this.patrolWidth){
+            this.pos.x = this.startX + this.patrolWidth;
+            this.speed = this.baseSpeed* -1;
+            this.pausePatrol = 500;
+            this.flipX(true);
+            this.direction = -1;
+        }
+        if(this.pos.x < this.startX ){
+            this.pos.x = this.startX;
+            this.speed = this.baseSpeed;
+            this.pausePatrol = 500;
+            this.flipX(false);
+            this.direction = 1;
+        }
+
         return true;
     }
 
@@ -283,6 +387,7 @@ var Player = me.ObjectEntity.extend({
         this.overworld = false;
 
         this.z = 100;
+        this.shootDelay = 0;
 
         var shape = this.getShape();
         shape.pos.x = 44;
@@ -360,10 +465,23 @@ var Player = me.ObjectEntity.extend({
     },
 
     shoot: function(){
-        if(this.necroMode){
-            var b = new Bullet(this.pos.x, this.pos.y, { direction: this.direction });
+        if(this.necroMode && this.shootDelay <= 0){
+            var b = new Bullet(this.pos.x + 30*this.direction, this.pos.y+40, { direction: this.direction });
             me.game.world.addChild(b);
             me.game.world.sort();
+            this.shootDelay = 200;
+            var self = this;
+            if(this.jumping || this.falling){
+                this.renderable.setCurrentAnimation("shoot_jump" + this.animationSuffix, function() {
+                    self.renderable.setCurrentAnimation("fall" + self.animationSuffix);
+                });
+            }else{
+                this.renderable.setCurrentAnimation("shoot" + this.animationSuffix, function() {
+                    self.renderable.setCurrentAnimation("idle" + self.animationSuffix);
+                })
+            }
+
+
         }
     },
 
@@ -371,6 +489,9 @@ var Player = me.ObjectEntity.extend({
         var self = this;
         this.parent(dt);
 
+        if(this.shootDelay >0){
+            this.shootDelay-=dt;
+        }
 
         this.followPos.x = this.pos.x + this.centerOffsetX;
         this.followPos.y = this.pos.y + this.centerOffsetY;
@@ -408,12 +529,14 @@ var Player = me.ObjectEntity.extend({
         }
 
         if(this.falling && this.vel.y > 0){
-            this.renderable.setCurrentAnimation("fall" + this.animationSuffix);
+            if( ! this.renderable.isCurrentAnimation("shoot_jump" + this.animationSuffix) ){
+                this.renderable.setCurrentAnimation("fall" + this.animationSuffix);
+            }
         }
 
         if(!this.falling && this.vel.y == 0){
             this.doubleJumped = false;
-            if(!me.input.isKeyPressed('right') && !me.input.isKeyPressed('left') && ! this.renderable.isCurrentAnimation("idle" + this.animationSuffix)){
+            if(!me.input.isKeyPressed('right') && !me.input.isKeyPressed('left') && ! this.renderable.isCurrentAnimation("idle" + this.animationSuffix)&& ! this.renderable.isCurrentAnimation("shoot" + this.animationSuffix)){
                 this.renderable.setCurrentAnimation("idle" + this.animationSuffix);
             }
         }
@@ -627,22 +750,121 @@ var Pickup = me.ObjectEntity.extend({
 
 });
 
+var WaspBullet = me.ObjectEntity.extend({
+    init: function(x, y, settings) {
+        settings = settings || {};
+        settings.image = "waspBullet";
+        settings.spritewidth =  78;
+        settings.spriteheight = 78;
+        settings.height = 30;
+        settings.width = 30;
+        direction = settings.direction;
+
+        this.parent( x, y, settings );
+        this.baddie = true;
+        this.overworld = false;
+        this.collidable = true;
+        this.z = 300;
+        this.gravity = 0;
+        this.vel.x = direction * 5.0;
+        this.vel.y = 5.0;
+        this.flipX( direction > 0 );
+
+    },
+
+    die: function(){
+        this.collidable = false;
+        me.game.world.removeChild(this);
+    },
+
+    update: function( dt ) {
+        this.parent( dt );
+        this.updateMovement();
+
+        if (!this.inViewport && (this.pos.y > me.video.getHeight())) {
+            // if yes reset the game
+            this.die();
+        }
+        if( this.vel.x == 0 || this.vel.y ==0 ) {
+            // we hit a wall?
+            this.die();
+        }
+
+        return true;
+    }
+
+});
+
+
+var CatBullet = me.ObjectEntity.extend({
+    init: function(x, y, settings) {
+        settings = settings || {};
+        settings.image = "baddieBullet";
+        settings.spritewidth =  64;
+        settings.spriteheight = 60;
+        settings.height = 30;
+        settings.width = 30;
+        direction = settings.direction;
+
+        this.parent( x, y, settings );
+        this.baddie = true;
+        this.overworld = false;
+        this.collidable = true;
+        this.z = 300;
+        this.gravity = 1;
+        this.vel.x = direction * 5.0;
+        this.vel.y = -10.0;
+        this.onthewayDown=false;
+        this.flipX( direction > 0 );
+
+    },
+
+    die: function(){
+        this.collidable = false;
+        me.game.world.removeChild(this);
+    },
+
+    update: function( dt ) {
+        this.parent( dt );
+        this.updateMovement();
+
+        if(this.vel.y > 0){
+            this.onthewayDown=true;
+        }
+
+        if (!this.inViewport && (this.pos.y > me.video.getHeight())) {
+            // if yes reset the game
+            this.die();
+        }
+        if( this.onthewayDown && (this.vel.x == 0 || this.vel.y ==0) ) {
+            // we hit a wall?
+            this.die();
+        }
+
+        return true;
+    }
+
+});
+
+
 var Bullet = me.ObjectEntity.extend({
     init: function(x, y, settings) {
         settings = settings || {};
         settings.image = settings.image || "zap";
-        settings.spritewidth =  96;
-        settings.spriteheight = 48;
-        settings.height = 48;
-        settings.width = 96;
+        settings.spritewidth =  111;
+        settings.spriteheight = 42;
+        settings.width = 111;
+        settings.height = 42;
         direction = settings.direction;
         this.parent( x, y, settings );
         this.bullet = true;
         this.collidable = true;
         this.z = 300;
         this.gravity = 0;
-        this.vel.x = direction * 9.0;
-        this.flipX( direction > 0 );
+        this.vel.x = direction * 15.0;
+        this.flipX( direction < 0 );
+
+        this.renderable.animationspeed = 10;
     },
 
     onCollision: function() {
