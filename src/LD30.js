@@ -70,6 +70,8 @@ var Baddie = me.ObjectEntity.extend({
         var col = me.game.world.collide(this);
         if(col && col.obj.bullet ) {
             // TODO : Do something awesome here.
+            this.renderable.flicker(2000);
+            this.renderable.animationpause = true;
         }
         return true;
     },
@@ -87,7 +89,7 @@ var Player = me.ObjectEntity.extend({
         shape.resize(88, 76);
         me.state.current().player = this;
 
-        this.setVelocity( 3, 15 );
+        this.setVelocity( 5, 15 );
         this.setFriction( 0.4, 0 );
         this.direction = 1;
 
@@ -103,7 +105,7 @@ var Player = me.ObjectEntity.extend({
         this.renderable.addAnimation( "jump", [ 4 ] );
         this.renderable.addAnimation( "jump_extra", [ 5 ] );
         this.renderable.addAnimation( "fall", [ 6 ] );
-        this.renderable.addAnimation( "run", [ 7, 8, 9, 10 ] );
+        this.renderable.addAnimation( "walk", [ 7, 8, 9, 10 ] );
         this.renderable.addAnimation( "attack", [ 11 ] );
         this.renderable.addAnimation( "wallstuck", [ 12 ] );
         this.renderable.addAnimation( "buttstomp", [ 13 ] );
@@ -124,21 +126,27 @@ var Player = me.ObjectEntity.extend({
     },
 
     update: function(dt) {
+        var self = this;
         this.parent(dt);
         // TODO acceleration
         if (me.input.isKeyPressed('left'))  {
-            this.vel.x = -5.5;
+            this.vel.x = -55.5;
             this.flipX(true);
             this.direction = -1;
-            this.renderable.setCurrentAnimation("run");
+            if( ! this.renderable.isCurrentAnimation("walk") ){
+                this.renderable.setCurrentAnimation("walk", function() {
+                    self.renderable.setCurrentAnimation("idle");
+                })
+            }
         } else if (me.input.isKeyPressed('right')) {
-            this.vel.x = 5.5;
+            this.vel.x = 25.5;
             this.flipX(false);
             this.direction = 1;
-            this.renderable.setCurrentAnimation("run");
-        }
-        else {
-            this.renderable.setCurrentAnimation("idle");
+            if( ! this.renderable.isCurrentAnimation("walk") ){
+                this.renderable.setCurrentAnimation("walk", function() {
+                    self.renderable.setCurrentAnimation("idle");
+                })
+            }
         }
 
         if( me.input.isKeyPressed('up') && !this.jumping && !this.falling) {
@@ -165,7 +173,7 @@ var Bullet = me.ObjectEntity.extend({
         this.collidable = true;
         this.z = 300;
         this.gravity = 0;
-        this.vel.x = direction * 5.0;
+        this.vel.x = direction * 9.0;
         this.flipX( direction > 0 );
     },
 
