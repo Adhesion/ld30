@@ -163,20 +163,34 @@ var Baddie = me.ObjectEntity.extend({
 
 var Fish = Baddie.extend({
     init: function(x, y, settings) {
-        settings.image = 'robut';
-        settings.spritewidth = 80;
-        settings.spriteheight = 80;
+        settings.image = 'fish';
+        settings.spritewidth = 141;
+        settings.spriteheight = 141;
         settings.type = 'Fish';
 
         this.patrolWidth = settings.width;
-        settings.height = 80;
-        settings.width = 80;
+        settings.height = 50;
+        settings.width = 70;
         this.parent( x, y, settings );
+
+
+        var shape = this.getShape();
+        if( !shape ) {
+            this.addShape(new me.Rect(-14, 10, 100, 64 ));
+            shape = this.getShape();
+        }
+        shape.pos.x = 0;
+        shape.pos.y = 20;
+        shape.resize(70, 50);
+
+        this.renderable.addAnimation( "walk", [ 0, 1 ] );
+        this.renderable.setCurrentAnimation("walk");
 
         this.startX = this.pos.x;
         this.baseSpeed = this.speed = 2.0;
         this.setVelocity( 5, 15 );
-
+        this.flipX(true);
+        this.direction = 1;
         this.renderable.animationspeed = 70;
     },
 
@@ -188,13 +202,13 @@ var Fish = Baddie.extend({
         if(this.pos.x > this.startX + this.patrolWidth){
             this.pos.x = this.startX + this.patrolWidth;
             this.speed = this.baseSpeed* -1;
-            this.flipX(true);
+            this.flipX(false);
             this.direction = -1;
         }
         if(this.pos.x < this.startX ){
             this.pos.x = this.startX;
             this.speed = this.baseSpeed;
-            this.flipX(false);
+            this.flipX(true);
             this.direction = 1;
         }
 
@@ -204,15 +218,27 @@ var Fish = Baddie.extend({
 
 var Wasp = Baddie.extend({
     init: function(x, y, settings) {
-        settings.image = 'robut';
-        settings.spritewidth = 80;
-        settings.spriteheight = 80;
+        settings.image = 'wasp';
+        settings.spritewidth = 141;
+        settings.spriteheight = 141;
         settings.type = 'Wasp';
 
         this.patrolWidth = settings.width;
         settings.height = 80;
         settings.width = 80;
         this.parent( x, y, settings );
+
+        this.renderable.addAnimation( "walk", [ 0, 1, 0, 2 ] );
+        this.renderable.addAnimation( "shoot", [ 4 ] );
+        this.renderable.setCurrentAnimation("walk");
+
+        if( settings.skel == null || !settings.skel ) {
+            this.renderable.addAnimation( "walk", [ 0, 1, 0, 2 ] );
+            this.renderable.setCurrentAnimation("walk");
+        }else{
+            this.renderable.addAnimation( "walk", [ 0, 1] );
+            this.renderable.setCurrentAnimation("walk");
+        }
 
         this.startX = this.pos.x;
         this.baseSpeed = this.speed = 3.0;
@@ -221,6 +247,9 @@ var Wasp = Baddie.extend({
         this.shootCooldown = 0;
         this.renderable.animationspeed = 70;
         this.pausePatrol = 0;
+
+        this.flipX(true);
+        this.direction = 1;
     },
 
     update: function(dt) {
@@ -229,7 +258,7 @@ var Wasp = Baddie.extend({
 
         if(this.shootCooldown > 0) this.shootCooldown-=dt;
 
-        if(this.shootCooldown <= 0 && !me.state.current().player.overworld){
+        if(this.shootCooldown <= 0 && !me.state.current().player.overworld && !this.overworld){
             var d = me.state.current().player.pos.x - this.pos.x;
             if( (Math.abs(d) < 350 && Math.abs(d) > 150) && ((d > 0 && this.direction > 0)||(d < 0 && this.direction < 0))){
                 this.pausePatrol = 500;
@@ -250,14 +279,14 @@ var Wasp = Baddie.extend({
             this.pos.x = this.startX + this.patrolWidth;
             this.speed = this.baseSpeed* -1;
             this.pausePatrol = 500;
-            this.flipX(true);
+            this.flipX(false);
             this.direction = -1;
         }
         if(this.pos.x < this.startX ){
             this.pos.x = this.startX;
             this.speed = this.baseSpeed;
             this.pausePatrol = 500;
-            this.flipX(false);
+            this.flipX(true);
             this.direction = 1;
         }
 
@@ -274,7 +303,7 @@ var Crab = Baddie.extend({
 
         this.patrolWidth = settings.width;
         settings.height = 30;
-        settings.width = 80;
+        settings.width = 50;
         this.parent( x, y, settings );
 
         var shape = this.getShape();
@@ -282,10 +311,12 @@ var Crab = Baddie.extend({
             this.addShape(new me.Rect(-14, 10, 100, 64 ));
             shape = this.getShape();
         }
-        shape.pos.x = -14;
-        shape.pos.y = 10;
-        shape.resize(100, 64);
+        shape.pos.x = 0;
+        shape.pos.y = 0;
+        shape.resize(60, 60);
 
+        this.renderable.addAnimation( "walk", [ 0, 1, 0, 2 ] );
+        this.renderable.setCurrentAnimation("walk");
 
         this.startX = this.pos.x;
         this.baseSpeed = this.speed = 1.5;
@@ -354,6 +385,14 @@ var Cat = Baddie.extend({
         // TODO Mess with shapes!
         shape.pos.y = 22;
         shape.resize(110, 74);
+
+        if( settings.skel == null || !settings.skel ) {
+            this.renderable.addAnimation( "walk", [ 0, 1, 0, 2 ] );
+            this.renderable.setCurrentAnimation("walk");
+        }else{
+            this.renderable.addAnimation( "walk", [ 0, 1] );
+            this.renderable.setCurrentAnimation("walk");
+        }
 
         this.startX = this.pos.x;
         this.baseSpeed = this.speed = 1.0;
