@@ -41,6 +41,7 @@ var LD30 = function() {
 
         me.pool.register( "player", Player );
         me.pool.register( "baddie", Baddie );
+        me.pool.register( "pickup", Pickup );
     };
 };
 
@@ -51,7 +52,7 @@ var Baddie = me.ObjectEntity.extend({
         settings.spriteheight = 80;
         this.parent( x, y, settings );
         this.alwaysUpdate = true;
-
+        this.baddie = true;
         this.setVelocity( 3, 15 );
         this.setFriction( 0.4, 0 );
         this.direction = 1;
@@ -83,11 +84,22 @@ var Player = me.ObjectEntity.extend({
         settings.image        = settings.image        || 'player';
         this.parent( x, y, settings );
         this.alwaysUpdate = true;
+        this.player = true;
+        this.hitTimer = 0;
+        this.hitVelX = 0;
+
+        this.image =  me.loader.getImage('player2');
+
+
         var shape = this.getShape();
         shape.pos.x = 44;
         shape.pos.y = 59;
         shape.resize(88, 76);
         me.state.current().player = this;
+
+        this.pickups = 0;
+        this.collisionTimer = 0;
+        this.doubleJumped = false;
 
         this.setVelocity( 5, 15 );
         this.setFriction( 0.4, 0 );
@@ -97,10 +109,11 @@ var Player = me.ObjectEntity.extend({
             this.pos.x + this.centerOffsetX,
             this.pos.y + this.centerOffsetY
         );
+
         me.game.viewport.follow( this.followPos, me.game.viewport.AXIS.BOTH );
         me.game.viewport.setDeadzone( me.game.viewport.width / 10, 1 );
 
-        this.renderable.animationspeed = 70
+        this.renderable.animationspeed = 70;
         this.renderable.addAnimation( "idle", [ 0, 1, 2, 3 ] );
         this.renderable.addAnimation( "jump", [ 4 ] );
         this.renderable.addAnimation( "jump_extra", [ 5 ] );
@@ -109,7 +122,7 @@ var Player = me.ObjectEntity.extend({
         this.renderable.addAnimation( "attack", [ 11 ] );
         this.renderable.addAnimation( "wallstuck", [ 12 ] );
         this.renderable.addAnimation( "buttstomp", [ 13 ] );
-        this.renderable.addAnimation( "impact", [ 14 ] );
+        this.renderable.addAnimation( "impact", [ 14, 14, 14, 14 ] );
         this.renderable.addAnimation( "die", [ 15 ] );
         this.renderable.addAnimation( "swim_idle", [ 16, 17, 18, 19 ] );
         this.renderable.addAnimation( "swim", [ 20, 21, 22, 23 ] );
@@ -128,6 +141,18 @@ var Player = me.ObjectEntity.extend({
     update: function(dt) {
         var self = this;
         this.parent(dt);
+
+        if(this.collisionTimer > 0){
+            this.collisionTimer-=dt;
+        }
+
+        if(this.hitTimer > 0){
+            this.hitTimer-=dt;
+            this.vel.x = this.hitVelX;
+            this.updateMovement();
+            return true;
+        }
+
         // TODO acceleration
         if (me.input.isKeyPressed('left'))  {
             this.vel.x = -55.5;
@@ -149,15 +174,158 @@ var Player = me.ObjectEntity.extend({
             }
         }
 
-        if( me.input.isKeyPressed('up') && !this.jumping && !this.falling) {
-            this.vel.y = -29;
-            this.jumping = true;
+        if(!this.falling && this.vel.y == 0){
+            this.doubleJumped = false;
+        }
+
+        if( me.input.isKeyPressed('up')) {
+            if(!this.jumping && !this.falling){
+                this.vel.y = -29;
+                this.jumping = true;
+            }
+            else if((this.jumping || this.falling) && !this.doubleJumped){
+                this.doubleJumped = true;
+                this.vel.y = -29;
+            }
+        }
+
+        var col = me.game.world.collide(this);
+        //console.log(col);
+
+        if(this.hitTimer <= 0 && this.collisionTimer <=0 && col && col.obj.baddie ) {
+
+            //TODO: change character to normal texture here!
+            //TODO: if pickups <= 0, die!
+
+            console.log("pickups: " + this.pickups);
+            if(this.pickups > 0){
+                for( var i=0; i<this.pickups; i++){
+                    var b = new OnHitPickup(this.pos.x, this.pos.y, {});
+                    me.game.world.addChild(b);
+                }
+                me.game.world.sort();
+                this.pickups = 0;
+            }
+
+            this.hitTimer = 250;
+            this.collisionTimer = 1000;
+            this.renderable.flicker(1000);
+
+            if(this.pos.x - col.obj.pos.x > 0){
+                this.vel.x = this.hitVelX = 50;
+            }else{
+                this.vel.x = this.hitVelX = -50;
+            }
+            this.vel.y = -20;
+            this.renderable.setCurrentAnimation("impact", function() {
+                self.renderable.setCurrentAnimation("idle");
+            });
         }
 
         this.updateMovement();
         return true;
     }
 })
+
+var OnHitPickup = me.ObjectEntity.extend({
+    /**
+     * constructor
+     */
+    init: function (x, y, settings) {
+        settings.collidable = true;
+        settings.image = settings.image || 'pickup';
+        settings.spritewidth =  64;
+        settings.spriteheight = 64;
+        settings.height = 64;
+        settings.width = 64;
+        // call the parent constructor
+        this.parent(x, y , settings);
+
+        this.pickup = true;
+        this.vel.x = Math.random() * 20-10;
+        this.vel.y = -10 - Math.random()*10;
+        this.pickupDelayTimer = 250;
+        this.flickering = false;
+        this.setFriction( 0.1, 0 );
+        this.life = 2000;
+        //
+        this.z = 300;
+
+
+        // set the renderable position to center
+        this.anchorPoint.set(0.5, 0.5);
+    },
+
+    update: function(dt) {
+        this.parent(dt);
+        this.updateMovement();
+
+        this.life -=dt;
+        if(this.life <= 500 && !this.flickering){
+            this.renderable.flicker(500);
+            this.flickering = true;
+        }
+        if(this.life <=0){
+            this.collidable = false;
+            me.game.world.removeChild(this);
+            return true;
+        }
+
+        if(this.pickupDelayTimer >0){
+            this.pickupDelayTimer -=dt;
+            return;
+        }
+
+        var col = me.game.world.collide(this);
+        //console.log(col);
+        if(this.pickupDelayTimer<=0 && col && col.obj.player ) {
+            this.collidable = false;
+            me.game.world.removeChild(this);
+            me.state.current().player.pickups++;
+            console.log("collectable collide " + me.state.current().player.pickups);
+        }
+
+        return true;
+    }
+
+});
+
+
+var Pickup = me.CollectableEntity.extend({
+    /**
+     * constructor
+     */
+    init: function (x, y, settings) {
+        settings.collidable = true;
+        settings.image = settings.image || 'pickup';
+        // call the parent constructor
+        this.parent(x, y , settings);
+
+        this.gravity = 0;
+
+        this.pickup = true;
+
+        // set the renderable position to center
+        this.anchorPoint.set(0.5, 0.5);
+    },
+
+    update: function(dt) {
+        this.parent(dt);
+        this.updateMovement();
+
+        var col = me.game.world.collide(this);
+        //console.log(col);
+        if(col && col.obj.player ) {
+            me.state.current().player.pickups++;
+            this.collidable = false;
+            me.game.world.removeChild(this);
+            console.log("collectable collide " + me.state.current().player.pickups);
+        }
+
+        return true;
+    }
+
+});
 
 var Bullet = me.ObjectEntity.extend({
     init: function(x, y, settings) {
@@ -178,6 +346,7 @@ var Bullet = me.ObjectEntity.extend({
     },
 
     onCollision: function() {
+
     },
 
     update: function( dt ) {
