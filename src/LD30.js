@@ -1,5 +1,6 @@
 var screenHeight = 560;
 var screenWidth = 960;
+var goodEnd = true;
 
 var LD30 = function() {
 
@@ -37,9 +38,11 @@ var LD30 = function() {
     this.loaded = function() {
 
         me.state.set( me.state.INTRO, new RadmarsScreen() );
+        me.state.set( me.state.MENU, new TitleScreen() );
         me.state.set( me.state.PLAY, new PlayScreen() );
+        me.state.set( me.state.GAMEOVER, new GameOverScreen() );
 
-        me.state.change( me.state.PLAY);
+        me.state.change( me.state.INTRO);
 
         me.pool.register( "player", Player );
         me.pool.register( "baddie", Baddie );
@@ -56,7 +59,8 @@ var LD30 = function() {
     };
 };
 
-LD30.data = {souls:10, collectedSouls:0, collectedSoulsMax:10};
+
+LD30.data = {souls:1, collectedSouls:0, collectedSoulsMax:10};
 
 LD30.HUD = LD30.HUD || {};
 
@@ -162,6 +166,90 @@ LD30.HUD.SoulDisplay = me.Renderable.extend( {
 });
 
 
+var HitEnter = me.Renderable.extend({
+    init: function( x, y ) {
+        this.cta = me.loader.getImage("introcta");
+        this.parent( new me.Vector2d(x,y), this.cta.width, this.cta.height );
+        this.floating = true;
+        this.z = 5;
+        this.ctaFlicker = 0;
+    },
+
+    draw: function(context) {
+        this.ctaFlicker++;
+        if( this.ctaFlicker > 20 )
+        {
+            context.drawImage( this.cta, this.pos.x, this.pos.y );
+            if( this.ctaFlicker > 40 ) this.ctaFlicker = 0;
+        }
+    },
+
+    update: function(dt) {
+        me.game.repaint();
+    }
+});
+
+var GameOverScreen = me.ScreenObject.extend({
+    init: function() {
+        // disable HUD here?
+        this.parent( true );
+    },
+
+    onResetEvent: function()
+    {
+        this.gameover = new me.ImageLayer("gameover", screenWidth, screenHeight, goodEnd ? "win" : "lose", 0);
+
+        this.hitenter = new HitEnter( 333, goodEnd ? 535 : 535 );
+        me.game.world.addChild( this.hitenter );
+
+        me.game.world.addChild( this.gameover );
+        //me.audio.stopTrack();
+        //me.audio.playTrack( "ld29-intro" );
+
+        this.subscription = me.event.subscribe( me.event.KEYDOWN, function (action, keyCode, edge) {
+            if( keyCode === me.input.KEY.ENTER ) {
+                me.state.change( me.state.INTRO );
+            }
+        });
+    },
+
+    onDestroyEvent: function() {
+        me.audio.stopTrack();
+        me.game.world.removeChild( this.gameover );
+        me.event.unsubscribe( this.subscription );
+    }
+});
+
+var TitleScreen = me.ScreenObject.extend({
+    init: function() {
+        this.parent( true );
+    },
+
+    onResetEvent: function() {
+        this.bg = new me.ImageLayer( "title", screenWidth, screenHeight, "splash", 1 );
+
+        this.hitenter = new HitEnter( 333, 535 );
+
+        me.game.world.addChild( this.bg );
+        me.game.world.addChild( this.hitenter);
+
+        //me.audio.playTrack( "ld30-intro" );
+
+        this.subscription = me.event.subscribe( me.event.KEYDOWN, function (action, keyCode, edge) {
+            if( keyCode === me.input.KEY.ENTER ) {
+                me.state.change( me.state.PLAY );
+            }
+        });
+
+        goodEnd = false;
+    },
+
+    onDestroyEvent: function() {
+        me.game.world.removeChild( this.bg );
+        me.game.world.removeChild( this.hitenter );
+        me.event.unsubscribe( this.subscription );
+    }
+});
 
 var LevelChanger = me.ObjectEntity.extend({
     init: function(x, y, settings) {
@@ -252,7 +340,7 @@ var Baddie = me.ObjectEntity.extend({
                     y: this.pos.y,
                     overworld:1,
                     width: 80, // TODO This controls patrol???
-                    height: 80,
+                    height: 80
                 });
                 b.z = 300;
                 me.game.world.addChild(b);
@@ -763,7 +851,7 @@ var Player = me.ObjectEntity.extend({
 
                 //TODO: change character to normal texture here!
                 //TODO: if pickups <= 0, die!
-                //this.necroMode = false;
+
                 if(this.pickups > 0){
                     for( var i=0; i<this.pickups; i++){
                         var b = new OnHitPickup(this.pos.x, this.pos.y, {});
@@ -771,8 +859,12 @@ var Player = me.ObjectEntity.extend({
                     }
                     me.game.world.sort();
                     this.pickups = 0;
+                    //this.necroMode = false;
+                    //this.animationSuffix = "_normal";
                 }
-                //this.animationSuffix = "_normal";
+                else {
+                    me.state.change( me.state.GAMEOVER);
+                }
 
                 this.hitTimer = 250;
                 this.collisionTimer = 1000;
@@ -867,7 +959,7 @@ var OnHitPickup = me.ObjectEntity.extend({
         this.pickupDelayTimer = 250;
         this.flickering = false;
         this.setFriction( 0.1, 0 );
-        this.life = 2000;
+        this.life = 3000;
         //
         this.z = 300;
 
@@ -897,7 +989,7 @@ var OnHitPickup = me.ObjectEntity.extend({
         }
 
         me.game.world.collide(this, true).forEach(function(col) {
-            if(this.pickupDelayTimer<=0 && col && col.obj.player ) {
+            if(this.pickupDelayTimer<=0 && col && col.obj.player && col.obj.collisionTimer <= 0 ) {
                 this.collidable = false;
                 me.game.world.removeChild(this);
                 me.state.current().player.pickups++;
@@ -946,7 +1038,7 @@ var Pickup = me.ObjectEntity.extend({
 
         if(me.state.current().player.overworld){
             me.game.world.collide(this, true).forEach(function(col) {
-                if(col && col.obj.player ) {
+                if(col && col.obj.player && col.obj.collisionTimer <= 0 ) {
                     me.state.current().pickups.remove(this);
                     me.state.current().player.pickups++;
                     this.collidable = false;
@@ -1202,6 +1294,10 @@ var PlayScreen = me.ScreenObject.extend({
 
     // this will be called on state change -> this
     onResetEvent: function() {
+        this.baddies = [];
+        this.pickups = [];
+        this.overworld = true;
+
         var level =  location.hash.substr(1) || "level1" ;
         me.levelDirector.loadLevel( level );
         this.changeLevel( level );
@@ -1222,7 +1318,7 @@ var RadmarsScreen = me.ScreenObject.extend({
 
         this.subscription = me.event.subscribe( me.event.KEYDOWN, function (action, keyCode, edge) {
             if( keyCode === me.input.KEY.ENTER ) {
-                me.state.change( me.state.PLAY );
+                me.state.change( me.state.MENU);
             }
         });
 

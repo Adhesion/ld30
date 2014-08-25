@@ -38,7 +38,6 @@ var GameResources = [
     _Image( "zap" ),
     _Image( "player" ),
 
-    _Image( "robut" ),
     _Image( "cat" ),
     _Image( "cat_skel" ),
 
@@ -57,6 +56,11 @@ var GameResources = [
     _Image( "doublejump" ),
     _Image( "dembones" ),
     _Image( "explode" ),
+
+    _Image( "win" ),
+    _Image( "lose" ),
+    _Image( "splash" ),
+    _Image( "introcta" ),
 
     //_Audio( "beep", "data/" ),
     _Image( "mapshit1"),
