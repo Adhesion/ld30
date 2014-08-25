@@ -1075,7 +1075,7 @@ var OnHitPickup = me.ObjectEntity.extend({
         }
 
         me.game.world.collide(this, true).forEach(function(col) {
-            if(this.pickupDelayTimer<=0 && col && col.obj.player && col.obj.collisionTimer <= 0 ) {
+            if(this.pickupDelayTimer<=0 && col && col.obj.player && col.obj.collisionTimer <= 0 && this.collidable) {
                 this.collidable = false;
                 me.game.world.removeChild(this);
                 LD30.data.souls++;
@@ -1125,7 +1125,7 @@ var Pickup = me.ObjectEntity.extend({
 
         if(me.state.current().player.overworld){
             me.game.world.collide(this, true).forEach(function(col) {
-                if(col && col.obj.player && col.obj.collisionTimer <= 0 ) {
+                if(col && col.obj.player && col.obj.collisionTimer <= 0 && this.collidable) {
                     me.state.current().pickups.remove(this);
                     LD30.data.souls++;
                     this.collidable = false;
@@ -1409,8 +1409,6 @@ var PlayScreen = me.ScreenObject.extend({
 
         this.changeLevel( level );
         this.HUD.startGame();
-
-
     },
 
     onDestroyEvent: function() {
