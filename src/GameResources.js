@@ -3,7 +3,7 @@ function _Image( name, path ) {
 }
 
 function _Audio( name ) {
-    return { name: name, type: "audio", src: "data/" , channels: 2 };
+    return { name: name, type: "audio", src: "data/audio/" , channels: 2 };
 }
 
 function _Level( name ) {
@@ -21,7 +21,6 @@ var GameResources = [
     _Image( "intro_mars" ),
     _Image( "intro_radmars1" ),
     _Image( "intro_radmars2" ),
-    _Audio( "radmarslogo" ),
 
     // ui
     _Image("16x16_font"),
@@ -69,8 +68,6 @@ var GameResources = [
     _Image( "gateway" ),
     _Image( "map_gateways" ),
 
-    //_Audio( "beep", "data/" ),
-
     _Image( "mapshit1"),
     _Image( "map_normal1"),
     _Image( "map_underworld1"),
@@ -78,5 +75,25 @@ var GameResources = [
     _Level( "level1" ),
     _Level( "level2" ),
     _Level( "level3" ),
-    _Level( "level4" )
+    _Level( "level4" ),
+
+    _Audio( "radmarslogo" ),
+    _Audio( "death" ),
+    _Audio( "doublejump" ),
+    _Audio( "enemydeath1" ),
+    _Audio( "enemydeath2" ),
+    _Audio( "enemydeath3" ),
+    _Audio( "enemydeath4" ),
+    _Audio( "enemyshoot" ),
+    _Audio( "hit" ),
+    _Audio( "jump" ),
+    _Audio( "ld30-real" ),
+    _Audio( "ld30-spirit" ),
+    _Audio( "ld30-title" ),
+    _Audio( "lostsouls" ),
+    _Audio( "pickup" ),
+    _Audio( "portal" ),
+    _Audio( "portalrev" ),
+    _Audio( "radmarslogo" ),
+    _Audio( "shoot" )
 ];

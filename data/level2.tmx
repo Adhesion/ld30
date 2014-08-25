@@ -73,11 +73,9 @@
   </data>
  </layer>
  <objectgroup name="entities" width="250" height="30">
-<<<<<<< HEAD
-  <object name="player" x="342" y="1012" width="144" height="144"/>
-=======
+
   <object name="player" x="338" y="1011" width="144" height="144"/>
->>>>>>> 0ef80536e3cddbc88a340a32481ce573c91539cc
+
   <object name="fish" x="1340" y="900" width="427" height="100"/>
   <object name="fish" x="2209" y="1050" width="621" height="100"/>
   <object name="fish" x="4276" y="746" width="231" height="68"/>

@@ -251,8 +251,8 @@ var GameOverScreen = me.ScreenObject.extend({
         me.game.world.addChild( this.hitenter );
 
         me.game.world.addChild( this.gameover );
-        //me.audio.stopTrack();
-        //me.audio.playTrack( "ld29-intro" );
+        me.audio.stopTrack();
+        me.audio.playTrack( "ld30-title" );
 
         this.subscription = me.event.subscribe( me.event.KEYDOWN, function (action, keyCode, edge) {
             if( keyCode === me.input.KEY.ENTER ) {
@@ -281,7 +281,8 @@ var TitleScreen = me.ScreenObject.extend({
         me.game.world.addChild( this.bg );
         me.game.world.addChild( this.hitenter);
 
-        //me.audio.playTrack( "ld30-intro" );
+        me.audio.stopTrack();
+        me.audio.playTrack( "ld30-title" );
 
         this.subscription = me.event.subscribe( me.event.KEYDOWN, function (action, keyCode, edge) {
             if( keyCode === me.input.KEY.ENTER ) {
@@ -401,6 +402,8 @@ var Baddie = me.ObjectEntity.extend({
                 me.game.world.addChild(b);
                 me.game.world.sort();
 
+                me.audio.play( "enemydeath" + Math.round(1+Math.random()*3) );
+
                 me.state.current().updateLayerVisibility(me.state.current().overworld);
             }
         }, this);
@@ -511,6 +514,7 @@ var Wasp = Baddie.extend({
         if(this.shootCooldown > 0) this.shootCooldown-=dt;
 
         if(this.shootCooldown <= 0 && !me.state.current().player.overworld && !this.overworld){
+            me.audio.play( "enemyshoot");
             var d = me.state.current().player.pos.x - this.pos.x;
             if( (Math.abs(d) < 350 && Math.abs(d) > 150) && ((d > 0 && this.direction > 0)||(d < 0 && this.direction < 0))){
                 this.pausePatrol = 500;
@@ -658,10 +662,10 @@ var Cat = Baddie.extend({
     update: function(dt) {
         this.parent(dt);
 
-
         if(this.shootCooldown > 0) this.shootCooldown-=dt;
 
-        if(this.shootCooldown <= 0&& !me.state.current().player.overworld){
+        if(this.shootCooldown <= 0 && !me.state.current().player.overworld && !this.overworld){
+            me.audio.play( "enemyshoot");
             var d = me.state.current().player.pos.x - this.pos.x;
             if( (Math.abs(d) < 350 && Math.abs(d) > 150) && ((d > 0 && this.direction > 0)||(d < 0 && this.direction < 0))){
                 this.pausePatrol = 500;
@@ -784,8 +788,6 @@ var Player = me.ObjectEntity.extend({
     toUnderworld: function(){
         if(this.overworld == true) return;
 
-
-
         this.overworld = true;
         this.necroMode = false;
         this.setVelocity( 7, 20 );
@@ -808,6 +810,7 @@ var Player = me.ObjectEntity.extend({
 
     shoot: function(){
         if(this.necroMode && this.shootDelay <= 0){
+            me.audio.play( "shoot" );
             var b = new Bullet(this.pos.x + 30*this.direction, this.pos.y+40, { direction: this.direction });
             me.game.world.addChild(b);
             me.game.world.sort();
@@ -914,11 +917,13 @@ var Player = me.ObjectEntity.extend({
                 this.vel.y = -40;
                 this.jumping = true;
                 self.renderable.setCurrentAnimation("jump" + this.animationSuffix);
+                me.audio.play( "jump" );
             }
             else if((this.jumping || this.falling) && !this.doubleJumped){
                 this.doubleJumped = true;
                 this.vel.y = -40;
                 self.renderable.setCurrentAnimation("double_jump" + this.animationSuffix);
+                me.audio.play( "doublejump" );
             }
         }
 
@@ -938,11 +943,14 @@ var Player = me.ObjectEntity.extend({
                     LD30.data.souls = 0;
                     //this.necroMode = false;
                     //this.animationSuffix = "_normal";
+                    me.audio.play( "hit" );
+                    me.audio.play( "lostsouls" );
                 }
                 else {
                     this.deathTimer = 2000;
                     //intensity, duration
                     me.game.viewport.shake(10, 2000);
+                    me.audio.play( "death" );
                 }
 
                 this.hitTimer = 250;
@@ -1072,6 +1080,7 @@ var OnHitPickup = me.ObjectEntity.extend({
                 this.collidable = false;
                 me.game.world.removeChild(this);
                 LD30.data.souls++;
+                me.audio.play( "pickup" );
             }
         }, this );
 
@@ -1122,6 +1131,7 @@ var Pickup = me.ObjectEntity.extend({
                     LD30.data.souls++;
                     this.collidable = false;
                     me.game.world.removeChild(this);
+                    me.audio.play( "pickup" );
                 }
             }, this);
         }
@@ -1291,6 +1301,12 @@ var PlayScreen = me.ScreenObject.extend({
 
     toUnderworld: function() {
         if( this.overworld ) {
+            me.audio.stopTrack();
+            me.audio.playTrack( "ld30-spirit" );
+
+            me.audio.play( "portal" );
+            me.audio.play( "lostsouls" );
+
             this.overworld = false;
             this.updateLayerVisibility(this.overworld);
             this.HUD.toUnderworld();
@@ -1380,10 +1396,16 @@ var PlayScreen = me.ScreenObject.extend({
         this.pickups = [];
         this.overworld = true;
 
+        me.audio.stopTrack();
+        me.audio.playTrack( "ld30-real" );
+        //me.audio.play( "portalrev" );
+
         var level =  location.hash.substr(1) || "level1" ;
         me.levelDirector.loadLevel( level );
         this.changeLevel( level );
         this.HUD.startGame();
+
+
     },
 
     onDestroyEvent: function() {
