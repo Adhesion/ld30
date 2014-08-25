@@ -55,12 +55,12 @@ var LD30 = function() {
         me.pool.register( "pickup", Pickup );
         me.pool.register( "underworld", Underworld );
         me.pool.register( "levelchanger", LevelChanger );
-
+        me.pool.register( "gameender", GameEnder );
     };
 };
 
 
-LD30.data = {souls:1, collectedSouls:0, collectedSoulsMax:10};
+LD30.data = {souls:1, collectedSouls:0, collectedSoulsMax:10, beatGame:false};
 
 LD30.HUD = LD30.HUD || {};
 
@@ -245,9 +245,12 @@ var GameOverScreen = me.ScreenObject.extend({
 
     onResetEvent: function()
     {
-        this.gameover = new me.ImageLayer("gameover", screenWidth, screenHeight, goodEnd ? "win" : "lose", 0);
+        var gotAllSouls = LD30.data.collectedSouls>=LD30.data.collectedSoulsMax;
 
-        this.hitenter = new HitEnter( 333, goodEnd ? 535 : 535 );
+        //ending_good //ending_bad
+        this.gameover = new me.ImageLayer("gameover", screenWidth, screenHeight, LD30.data.beatGame ? (gotAllSouls?"ending_good":"ending_bad") : "lose", 0);
+
+        this.hitenter = new HitEnter( 350, LD30.data.beatGame ? 450 : 450 );
         me.game.world.addChild( this.hitenter );
 
         me.game.world.addChild( this.gameover );
@@ -276,7 +279,7 @@ var TitleScreen = me.ScreenObject.extend({
     onResetEvent: function() {
         this.bg = new me.ImageLayer( "title", screenWidth, screenHeight, "splash", 1 );
 
-        this.hitenter = new HitEnter( 333, 535 );
+        this.hitenter = new HitEnter( 350, 400 );
 
         me.game.world.addChild( this.bg );
         me.game.world.addChild( this.hitenter);
@@ -320,6 +323,31 @@ var LevelChanger = me.ObjectEntity.extend({
         me.game.world.collide(this, true).forEach(function(col) {
             if(col && col.obj == me.state.current().player  ) {
                 me.state.current().goToLevel(this.toLevel);
+            }
+        }, this);
+    }
+});
+
+var GameEnder = me.ObjectEntity.extend({
+    init: function(x, y, settings) {
+        // TODO: Just bake image or attach to obj?
+        settings.image = "gateway";
+        settings.spritewidth = 144;
+        settings.spriteheight = 192;
+        this.toLevel = settings.toLevel;
+        this.parent( x, y, settings );
+        this.gravity = 0;
+        this.collidable = true;
+        this.flipX(true);
+    },
+    update: function(dt) {
+        // TODO: Just bake image or attach to obj?
+        this.parent(dt);
+        this.updateMovement();
+
+        me.game.world.collide(this, true).forEach(function(col) {
+            if(col && col.obj == me.state.current().player  ) {
+                me.state.current().endGame();
             }
         }, this);
     }
@@ -1295,6 +1323,7 @@ var PlayScreen = me.ScreenObject.extend({
 
         this.HUD = new LD30.HUD.Container();
         me.game.world.addChild(this.HUD);
+        LD30.data.beatGame = false;
 
     },
 
@@ -1313,6 +1342,11 @@ var PlayScreen = me.ScreenObject.extend({
         }
     },
 
+    endGame: function(){
+        LD30.data.beatGame = true;
+        me.state.change( me.state.GAMEOVER );
+    },
+
     goToLevel: function( level ) {
         if( !this.overworld ) {
             this.baddies = [];
@@ -1323,7 +1357,6 @@ var PlayScreen = me.ScreenObject.extend({
             this.HUD.startGame();
         }
     },
-
 
     updateLayerVisibility: function(overworld) {
         var level = me.game.currentLevel;
@@ -1398,7 +1431,7 @@ var PlayScreen = me.ScreenObject.extend({
         this.baddies = [];
         this.pickups = [];
         this.overworld = true;
-
+        LD30.data.beatGame = false;
         var level =  location.hash.substr(1) || "level1" ;
         me.levelDirector.loadLevel( level );
 

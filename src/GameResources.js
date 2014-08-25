@@ -67,11 +67,16 @@ var GameResources = [
     _Image( "paralax_underworld1" ),
     _Image( "gateway" ),
     _Image( "map_gateways" ),
+    _Image( "map_altar" ),
 
     _Image( "mapshit1"),
     _Image( "map_normal1"),
     _Image( "map_underworld1"),
     _Image( "collision_tiles" ),
+
+    _Image( "ending_bad" ),
+    _Image( "ending_good" ),
+
     _Level( "level1" ),
     _Level( "level2" ),
     _Level( "level3" ),
