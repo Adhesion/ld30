@@ -76,7 +76,6 @@
   <object name="fish" x="4228" y="587" width="177" height="74"/>
   <object name="fish" x="3540" y="583" width="177" height="74"/>
   <object name="wasp" x="3176" y="439" width="85" height="170"/>
-  <object name="wasp" x="5092" y="499" width="85" height="170"/>
   <object name="wasp" x="4962" y="497" width="85" height="170"/>
   <object name="wasp" x="5234" y="499" width="85" height="170"/>
   <object name="crab" x="5618" y="1058" width="715" height="86"/>
