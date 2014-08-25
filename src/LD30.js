@@ -302,10 +302,14 @@ var TitleScreen = me.ScreenObject.extend({
 var LevelChanger = me.ObjectEntity.extend({
     init: function(x, y, settings) {
         // TODO: Just bake image or attach to obj?
+        settings.image = "gateway";
+        settings.spritewidth = 144;
+        settings.spriteheight = 192;
         this.toLevel = settings.toLevel;
         this.parent( x, y, settings );
         this.gravity = 0;
         this.collidable = true;
+        this.flipX(true);
     },
     update: function(dt) {
         // TODO: Just bake image or attach to obj?
@@ -323,6 +327,9 @@ var LevelChanger = me.ObjectEntity.extend({
 
 var Underworld = me.ObjectEntity.extend({
     init: function(x, y, settings) {
+        settings.image = "gateway";
+        settings.spritewidth = 144; //3
+        settings.spriteheight = 192; //4
         this.parent( x, y, settings );
         this.gravity = 0;
         this.collidable = true;
@@ -373,7 +380,7 @@ var Baddie = me.ObjectEntity.extend({
             if(col && col.obj.bullet && !this.overworld ) {
                 col.obj.die();
                 me.state.current().baddies.remove(this);
-
+                me.game.viewport.shake(2, 250);
                 //TODO: spawn death particle?
                 this.collidable = false;
                 me.game.world.removeChild(this);
@@ -718,6 +725,7 @@ var Player = me.ObjectEntity.extend({
 
         this.pickups = LD30.data.souls;
         this.collisionTimer = 0;
+        this.deathTimer = 0;
         this.doubleJumped = false;
 
         this.animationSuffix = "";
@@ -759,7 +767,11 @@ var Player = me.ObjectEntity.extend({
         this.renderable.addAnimation( "shoot_jump_normal", [ 8 + offset ] );
         this.renderable.addAnimation( "hit_normal", [ 11 + offset , 11 + offset, 11 + offset] );
 
+        this.renderable.addAnimation( "die", [ 11 , 23, 11 , 23, 11 , 23, 11 , 23] );
+
         this.renderable.setCurrentAnimation("idle" + this.animationSuffix);
+
+
 
         me.input.bindKey(me.input.KEY.LEFT,  "left");
         me.input.bindKey(me.input.KEY.RIGHT, "right");
@@ -818,14 +830,26 @@ var Player = me.ObjectEntity.extend({
         var self = this;
         this.parent(dt);
 
-        this.followPos.x = this.pos.x + this.centerOffsetX;
-        this.followPos.y = this.pos.y + this.centerOffsetY;
-
         LD30.data.souls = this.pickups;
 
         if(this.shootDelay >0){
             this.shootDelay-=dt;
         }
+
+        if(this.deathTimer > 0){
+            this.deathTimer-=dt;
+            if( ! this.renderable.isCurrentAnimation("die") ){
+                this.renderable.setCurrentAnimation("die");
+            }
+            this.updateMovement();
+            if(this.deathTimer<=0){
+                me.state.change( me.state.GAMEOVER);
+            }
+            return true;
+        }
+
+        this.followPos.x = this.pos.x + this.centerOffsetX;
+        this.followPos.y = this.pos.y + this.centerOffsetY;
 
         if(this.disableInputTimer > 0){
             this.disableInputTimer-=dt;
@@ -906,6 +930,7 @@ var Player = me.ObjectEntity.extend({
                 //TODO: if pickups <= 0, die!
 
                 if(this.pickups > 0){
+                    me.game.viewport.shake(5, 250);
                     for( var i=0; i<this.pickups; i++){
                         var b = new OnHitPickup(this.pos.x, this.pos.y, {});
                         me.game.world.addChild(b);
@@ -916,7 +941,9 @@ var Player = me.ObjectEntity.extend({
                     //this.animationSuffix = "_normal";
                 }
                 else {
-                    me.state.change( me.state.GAMEOVER);
+                    this.deathTimer = 2000;
+                    //intensity, duration
+                    me.game.viewport.shake(10, 2000);
                 }
 
                 this.hitTimer = 250;
@@ -1268,6 +1295,7 @@ var PlayScreen = me.ScreenObject.extend({
             this.overworld = false;
             this.updateLayerVisibility(this.overworld);
             this.HUD.toUnderworld();
+            me.game.viewport.shake(5, 1000);
         }
     },
 
