@@ -1440,21 +1440,21 @@ var RadmarsRenderable = me.Renderable.extend({
 
     draw: function(context) {
         context.drawImage( this.bg, 0, 0 );
-        if( this.counter < 130) context.drawImage( this.text_mars, 266+80, 317+60 );
-        else if( this.counter < 135) context.drawImage( this.text_radmars2, 224+80, 317+60 );
-        else if( this.counter < 140) context.drawImage( this.text_radmars1, 224+80, 317+60 );
-        else if( this.counter < 145) context.drawImage( this.text_radmars2, 224+80, 317+60 );
-        else if( this.counter < 150) context.drawImage( this.text_radmars1, 224+80, 317+60 );
-        else if( this.counter < 155) context.drawImage( this.text_radmars2, 224+80, 317+60 );
-        else if( this.counter < 160) context.drawImage( this.text_radmars1, 224+80, 317+60 );
-        else if( this.counter < 165) context.drawImage( this.text_radmars2, 224+80, 317+60 );
-        else context.drawImage( this.text_radmars1, 224+80, 317+60 );
+        if( this.counter < 130) context.drawImage( this.text_mars, 266+80+79, 317+60-20 );
+        else if( this.counter < 135) context.drawImage( this.text_radmars2, 224+80+79, 317+60-20 );
+        else if( this.counter < 140) context.drawImage( this.text_radmars1, 224+80+79, 317+60-20 );
+        else if( this.counter < 145) context.drawImage( this.text_radmars2, 224+80+79, 317+60-20 );
+        else if( this.counter < 150) context.drawImage( this.text_radmars1, 224+80+79, 317+60-20 );
+        else if( this.counter < 155) context.drawImage( this.text_radmars2, 224+80+79, 317+60-20 );
+        else if( this.counter < 160) context.drawImage( this.text_radmars1, 224+80+79, 317+60-20 );
+        else if( this.counter < 165) context.drawImage( this.text_radmars2, 224+80+79, 317+60-20 );
+        else context.drawImage( this.text_radmars1, 224+80+79, 317+60-20 );
 
-        if( this.counter < 100) context.drawImage( this.glasses1, 249+80, 229*(this.counter/100)+60 );
-        else if( this.counter < 105) context.drawImage( this.glasses2, 249+80, 229+60 );
-        else if( this.counter < 110) context.drawImage( this.glasses3, 249+80, 229+60 );
-        else if( this.counter < 115) context.drawImage( this.glasses4, 249+80, 229+60 );
-        else context.drawImage( this.glasses1, 249+80, 229+60 );
+        if( this.counter < 100) context.drawImage( this.glasses1, 249+80+79, 229*(this.counter/100)+60-20 );
+        else if( this.counter < 105) context.drawImage( this.glasses2, 249+80+79, 229+60-20 );
+        else if( this.counter < 110) context.drawImage( this.glasses3, 249+80+79, 229+60-20 );
+        else if( this.counter < 115) context.drawImage( this.glasses4, 249+80+79, 229+60-20 );
+        else context.drawImage( this.glasses1, 249+80+79, 229+60-20 );
     },
 
     update: function( dt ) {
