@@ -64,9 +64,12 @@ var GameResources = [
     _Image( "splash" ),
     _Image( "introcta" ),
 
+    _Image( "paralax_normal1" ),
+    _Image( "paralax_underworld1" ),
     //_Audio( "beep", "data/" ),
     _Image( "mapshit1"),
     _Image( "map_normal1"),
+    _Image( "map_underworld1"),
     _Image( "collision_tiles" ),
     _Level( "level1" ),
     _Level( "level2" ),

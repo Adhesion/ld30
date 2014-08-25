@@ -18,7 +18,7 @@ var LD30 = function() {
         if (true) {
             window.onReady(function () {
                 me.plugin.register.defer(this, debugPanel, "debug", me.input.KEY.V);
-                me.debug.renderHitBox = true;
+                me.debug.renderHitBox = false;
             });
         }
         // Sync up post loading stuff.
@@ -124,7 +124,7 @@ LD30.HUD.SoulDisplay = me.Renderable.extend( {
         // local copy of the global score
         this.souls = -1;
 
-        this.gaugePos = {x:800, y:0};
+        this.gaugePos = {x:860, y:0};
         this.gaugeHeight = 147;
         this.gaugeRenderHeight = 1;
         this.gaugeOffset = 0;
@@ -137,6 +137,7 @@ LD30.HUD.SoulDisplay = me.Renderable.extend( {
     startGame: function(){
         this.render = true;
         var self = this;
+        this.showHarvestSouls = false;
         this.showFindGate = true;
         this.findGatePos.x = -500;
         new me.Tween(self.findGatePos).to({x:100}, 500).easing(me.Tween.Easing.Quintic.Out).delay(1000).onComplete(function(){
@@ -153,9 +154,10 @@ LD30.HUD.SoulDisplay = me.Renderable.extend( {
     toUnderworld: function() {
         var self = this;
         new me.Tween(self.gaugePos).to({x:700, y: 200}, 250).easing(me.Tween.Easing.Quintic.Out).onComplete(function(){
-            new me.Tween(self.gaugePos).to({x:800, y: 0}, 500).easing(me.Tween.Easing.Quintic.InOut).delay(2000).start();
+            new me.Tween(self.gaugePos).to({x:860, y: 0}, 500).easing(me.Tween.Easing.Quintic.InOut).delay(2000).start();
         }).start();
 
+        this.showFindGate = false;
         this.showHarvestSouls = true;
         this.harvestSoulsPos.x = 1000;
         new me.Tween(self.harvestSoulsPos).to({x:400}, 500).easing(me.Tween.Easing.Quintic.Out).delay(3000).onComplete(function(){
