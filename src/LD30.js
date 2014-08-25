@@ -1300,8 +1300,8 @@ var PlayScreen = me.ScreenObject.extend({
 
     toUnderworld: function() {
         if( this.overworld ) {
-            me.audio.stopTrack();
-            me.audio.playTrack( "ld30-spirit" );
+            me.audio.mute( "ld30-real" );
+			me.audio.unmute( "ld30-spirit" );
 
             me.audio.play( "portal" );
             me.audio.play( "lostsouls" );
@@ -1387,6 +1387,9 @@ var PlayScreen = me.ScreenObject.extend({
         me.game.world.sort();
         me.game.viewport.fadeOut( '#000000', 1000, function() {
         });
+		
+		me.audio.mute( "ld30-spirit" );
+		me.audio.unmute( "ld30-real" );
     },
 
     // this will be called on state change -> this
@@ -1395,9 +1398,10 @@ var PlayScreen = me.ScreenObject.extend({
         this.pickups = [];
         this.overworld = true;
 
-        me.audio.stopTrack();
-        me.audio.playTrack( "ld30-real" );
-        //me.audio.play( "portalrev" );
+		me.audio.stopTrack();
+        me.audio.play( "ld30-real", true );
+		me.audio.play( "ld30-spirit", true );
+        me.audio.play( "portalrev" );
 
         var level =  location.hash.substr(1) || "level1" ;
         me.levelDirector.loadLevel( level );
@@ -1409,6 +1413,8 @@ var PlayScreen = me.ScreenObject.extend({
 
     onDestroyEvent: function() {
         this.HUD.endGame();
+		me.audio.stop("ld30-real");
+		me.audio.stop("ld30-spirit");
     },
 
     update: function() {
