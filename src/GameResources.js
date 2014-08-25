@@ -33,6 +33,8 @@ var GameResources = [
     _Image("ui_pickup2"),
     _Image("summon_gauge_bg"),
     _Image("summon_gauge_fill"),
+    _Image("find_gate"),
+    _Image("harvest_souls"),
 
     // Player
     _Image( "zap" ),

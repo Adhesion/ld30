@@ -69,7 +69,6 @@ LD30.HUD.Container = me.ObjectContainer.extend({
         // call the constructor
         this.parent();
 
-
         this.isPersistent = true;
         this.collidable = false;
 
@@ -78,6 +77,10 @@ LD30.HUD.Container = me.ObjectContainer.extend({
         this.name = "HUD";
         this.soulDisplay = new LD30.HUD.SoulDisplay(25, 25);
         this.addChild(this.soulDisplay);
+    },
+
+    startGame:function(){
+        this.soulDisplay.startGame();
     },
 
     toUnderworld: function() {
@@ -105,6 +108,15 @@ LD30.HUD.SoulDisplay = me.Renderable.extend( {
         this.gaugebg = me.loader.getImage("summon_gauge_bg");
         this.gauge  = me.loader.getImage("summon_gauge_fill");
 
+        this.findGate = me.loader.getImage("find_gate");
+        this.harvestSouls = me.loader.getImage("harvest_souls");
+
+        this.showFindGate = false;
+        this.showHarvestSouls = false;
+
+        this.findGatePos = {x:-500, y:300};
+        this.harvestSoulsPos = {x:1000, y:300};
+
         // local copy of the global score
         this.souls = -1;
 
@@ -117,14 +129,31 @@ LD30.HUD.SoulDisplay = me.Renderable.extend( {
         this.floating = true;
     },
 
+    startGame: function(){
+        var self = this;
+        this.showFindGate = true;
+        this.findGatePos.x = -500;
+        new me.Tween(self.findGatePos).to({x:100}, 500).easing(me.Tween.Easing.Quintic.Out).delay(1000).onComplete(function(){
+            new me.Tween(self.findGatePos).to({x:1000}, 1000).easing(me.Tween.Easing.Quintic.In).delay(2000).onComplete(function(){
+                self.showFindGate = false;
+            }).start();
+        }).start();
+    },
+
     toUnderworld: function() {
         var self = this;
         new me.Tween(self.gaugePos).to({x:700, y: 200}, 250).easing(me.Tween.Easing.Quintic.Out).onComplete(function(){
             new me.Tween(self.gaugePos).to({x:800, y: 0}, 500).easing(me.Tween.Easing.Quintic.InOut).delay(2000).start();
         }).start();
+
+        this.showHarvestSouls = true;
+        this.harvestSoulsPos.x = 1000;
+        new me.Tween(self.harvestSoulsPos).to({x:400}, 500).easing(me.Tween.Easing.Quintic.Out).delay(3000).onComplete(function(){
+            new me.Tween(self.harvestSoulsPos).to({x:-400}, 1000).easing(me.Tween.Easing.Quintic.In).delay(2000).onComplete(function(){
+                self.showHarvestSouls = false;
+            }).start();
+        }).start();
     },
-
-
 
     update : function () {
         this.souls =  LD30.data.souls;
@@ -156,7 +185,12 @@ LD30.HUD.SoulDisplay = me.Renderable.extend( {
             context.drawImage( this.pickup1, this.pos.x, this.pos.y );
         }
 
-
+        if(this.showHarvestSouls){
+            context.drawImage( this.harvestSouls, this.pos.x + this.harvestSoulsPos.x, this.pos.y+ this.harvestSoulsPos.y );
+        }
+        if(this.showFindGate){
+            context.drawImage( this.findGate, this.pos.x + this.findGatePos.x, this.pos.y+ this.findGatePos.y );
+        }
 
         context.drawImage( this.gaugebg, this.pos.x + this.gaugePos.x, this.pos.y+ this.gaugePos.y );
         context.drawImage( this.gauge, this.pos.x + this.gaugePos.x + 15, this.pos.y+ this.gaugePos.y + 54 + this.gaugeOffset, 21, this.gaugeRenderHeight );
@@ -678,12 +712,15 @@ var Player = me.ObjectEntity.extend({
         this.setFriction( 0.4, 0 );
         this.direction = 1;
 
+        this.centerOffsetX = 75;
+        this.centerOffsetY = 0;
+
         this.followPos = new me.Vector2d(
             this.pos.x + this.centerOffsetX,
             this.pos.y + this.centerOffsetY
         );
 
-        me.game.viewport.follow( this.pos, me.game.viewport.AXIS.BOTH );
+        me.game.viewport.follow( this.followPos, me.game.viewport.AXIS.BOTH );
         me.game.viewport.setDeadzone( me.game.viewport.width / 10, 1 );
 
         this.renderable.animationspeed = 150;
@@ -767,6 +804,9 @@ var Player = me.ObjectEntity.extend({
         var self = this;
         this.parent(dt);
 
+        this.followPos.x = this.pos.x + this.centerOffsetX;
+        this.followPos.y = this.pos.y + this.centerOffsetY;
+
         LD30.data.souls = this.pickups;
 
         if(this.shootDelay >0){
@@ -784,8 +824,7 @@ var Player = me.ObjectEntity.extend({
             this.gravity = 1;
         }
 
-        this.followPos.x = this.pos.x + this.centerOffsetX;
-        this.followPos.y = this.pos.y + this.centerOffsetY;
+
 
         if(this.collisionTimer > 0){
             this.collisionTimer-=dt;
@@ -825,8 +864,8 @@ var Player = me.ObjectEntity.extend({
             }
         }
 
-        if(!this.falling && !this.jumping){
-            console.log("doblejump reset");
+        if(!this.falling && !this.jumping && this.vel.y == 0){
+           // console.log("doblejump reset");
             this.doubleJumped = false;
             if(!me.input.isKeyPressed('right') && !me.input.isKeyPressed('left') && ! this.renderable.isCurrentAnimation("idle" + this.animationSuffix)&& ! this.renderable.isCurrentAnimation("shoot" + this.animationSuffix)){
                 this.renderable.setCurrentAnimation("idle" + this.animationSuffix);
@@ -1207,6 +1246,7 @@ var PlayScreen = me.ScreenObject.extend({
 
         this.HUD = new LD30.HUD.Container();
         me.game.world.addChild(this.HUD);
+
     },
 
     toUnderworld: function() {
@@ -1224,6 +1264,7 @@ var PlayScreen = me.ScreenObject.extend({
             this.overworld = true;
             me.levelDirector.loadLevel( level );
             me.state.current().changeLevel( level );
+            this.HUD.startGame();
         }
     },
 
@@ -1301,6 +1342,7 @@ var PlayScreen = me.ScreenObject.extend({
         var level =  location.hash.substr(1) || "level1" ;
         me.levelDirector.loadLevel( level );
         this.changeLevel( level );
+        this.HUD.startGame();
     },
 
     onDestroyEvent: function() {
