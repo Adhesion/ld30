@@ -362,7 +362,7 @@ var Baddie = me.ObjectEntity.extend({
         }
 
         this.parent( x, y, settings );
-        this.alwaysUpdate = true;
+        this.alwaysUpdate = false;
         this.baddie = true;
         this.setVelocity( 3, 15 );
         this.setFriction( 0.4, 0 );
