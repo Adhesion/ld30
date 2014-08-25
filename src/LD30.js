@@ -83,6 +83,10 @@ LD30.HUD.Container = me.ObjectContainer.extend({
         this.soulDisplay.startGame();
     },
 
+    endGame: function(){
+        this.soulDisplay.endGame();
+    },
+
     toUnderworld: function() {
         this.soulDisplay.toUnderworld();
     }
@@ -123,13 +127,15 @@ LD30.HUD.SoulDisplay = me.Renderable.extend( {
         this.gaugePos = {x:800, y:0};
         this.gaugeHeight = 147;
         this.gaugeRenderHeight = 1;
-        this.gaugeOffset = 0
+        this.gaugeOffset = 0;
+        this.render = false;
 
         // make sure we use screen coordinates
         this.floating = true;
     },
 
     startGame: function(){
+        this.render = true;
         var self = this;
         this.showFindGate = true;
         this.findGatePos.x = -500;
@@ -138,6 +144,10 @@ LD30.HUD.SoulDisplay = me.Renderable.extend( {
                 self.showFindGate = false;
             }).start();
         }).start();
+    },
+
+    endGame: function(){
+        this.render = false;
     },
 
     toUnderworld: function() {
@@ -172,6 +182,8 @@ LD30.HUD.SoulDisplay = me.Renderable.extend( {
     },
 
     draw : function (context) {
+        if(!this.render)return;
+
         this.pickupTimer ++;
         if(this.pickupTimer > 50){
             this.pickupTimer = 0;
@@ -1346,6 +1358,7 @@ var PlayScreen = me.ScreenObject.extend({
     },
 
     onDestroyEvent: function() {
+        this.HUD.endGame();
     },
 
     update: function() {
