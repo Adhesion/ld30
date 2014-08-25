@@ -26,6 +26,8 @@ var LD30 = function() {
         me.loader.preload( GameResources );
 
         me.state.change( me.state.LOADING );
+
+
         return;
     };
 
@@ -53,6 +55,113 @@ var LD30 = function() {
 
     };
 };
+
+LD30.data = {souls:10, collectedSouls:0, collectedSoulsMax:10};
+
+LD30.HUD = LD30.HUD || {};
+
+LD30.HUD.Container = me.ObjectContainer.extend({
+    init: function() {
+        // call the constructor
+        this.parent();
+
+
+        this.isPersistent = true;
+        this.collidable = false;
+
+        // make sure our object is always draw first
+        this.z = Infinity;
+        this.name = "HUD";
+        this.soulDisplay = new LD30.HUD.SoulDisplay(25, 25);
+        this.addChild(this.soulDisplay);
+    },
+
+    toUnderworld: function() {
+        this.soulDisplay.toUnderworld();
+    }
+});
+
+LD30.HUD.SoulDisplay = me.Renderable.extend( {
+    /**
+     * constructor
+     */
+    init: function(x, y) {
+
+        // call the parent constructor
+        // (size does not matter here)
+        this.parent(new me.Vector2d(x, y), 10, 10);
+
+        // create a font
+        this.font = new me.BitmapFont("32x32_font", 32);
+        this.font.set("right");
+
+        this.pickupTimer = 0;
+        this.pickup1 = me.loader.getImage("ui_pickup");
+        this.pickup2 = me.loader.getImage("ui_pickup2");
+        this.gaugebg = me.loader.getImage("summon_gauge_bg");
+        this.gauge  = me.loader.getImage("summon_gauge_fill");
+
+        // local copy of the global score
+        this.souls = -1;
+
+        this.gaugePos = {x:800, y:0};
+        this.gaugeHeight = 147;
+        this.gaugeRenderHeight = 1;
+        this.gaugeOffset = 0
+
+        // make sure we use screen coordinates
+        this.floating = true;
+    },
+
+    toUnderworld: function() {
+        var self = this;
+        new me.Tween(self.gaugePos).to({x:700, y: 200}, 250).easing(me.Tween.Easing.Quintic.Out).onComplete(function(){
+            new me.Tween(self.gaugePos).to({x:800, y: 0}, 500).easing(me.Tween.Easing.Quintic.InOut).delay(2000).start();
+        }).start();
+    },
+
+
+
+    update : function () {
+        this.souls =  LD30.data.souls;
+
+        var collected = LD30.data.collectedSouls;
+        var max = LD30.data.collectedSoulsMax;
+        var h = Math.round((collected/max) * this.gaugeHeight);
+        if(h < 0) h=0;
+        if(h > this.gaugeHeight) h = this.gaugeHeight;
+
+        //TODO: animate this?
+        this.gaugeRenderHeight= h;
+        this.gaugeOffset = this.gaugeHeight - this.gaugeRenderHeight;
+
+        return true;
+    },
+
+    draw : function (context) {
+        this.pickupTimer ++;
+        if(this.pickupTimer > 50){
+            this.pickupTimer = 0;
+        }
+
+        this.font.draw (context, this.souls, this.pos.x + 70, this.pos.y + 30);
+
+        if(this.pickupTimer > 25){
+            context.drawImage( this.pickup2, this.pos.x, this.pos.y );
+        }else{
+            context.drawImage( this.pickup1, this.pos.x, this.pos.y );
+        }
+
+
+
+        context.drawImage( this.gaugebg, this.pos.x + this.gaugePos.x, this.pos.y+ this.gaugePos.y );
+        context.drawImage( this.gauge, this.pos.x + this.gaugePos.x + 15, this.pos.y+ this.gaugePos.y + 54 + this.gaugeOffset, 21, this.gaugeRenderHeight );
+        //(img_elem,dx_or_sx,dy_or_sy,dw_or_sw,dh_or_sh,dx,dy,dw,dh)
+    }
+
+});
+
+
 
 var LevelChanger = me.ObjectEntity.extend({
     init: function(x, y, settings) {
@@ -463,6 +572,7 @@ var Player = me.ObjectEntity.extend({
 
         this.z = 100;
         this.shootDelay = 0;
+        this.disableInputTimer = 0;
 
         var shape = this.getShape();
         shape.pos.x = 44;
@@ -470,7 +580,7 @@ var Player = me.ObjectEntity.extend({
         shape.resize(70, 110);
         me.state.current().player = this;
 
-        this.pickups = 0;
+        this.pickups = LD30.data.souls;
         this.collisionTimer = 0;
         this.doubleJumped = false;
 
@@ -522,15 +632,20 @@ var Player = me.ObjectEntity.extend({
     },
 
     toUnderworld: function(){
+        if(this.overworld == true) return;
+
         this.overworld = true;
         this.necroMode = false;
         this.setVelocity( 7, 20 );
         this.setFriction( 0.7, 0 );
 
+        this.disableInputTimer = 1500;
+
+        LD30.data.collectedSouls += this.pickups;
         this.renderable.animationspeed = 165;
         if(this.pickups > 0){
             for( var i=0; i<this.pickups; i++){
-                var b = new EnterPortalParticle(this.pos.x, this.pos.y, {});
+                var b = new EnterPortalParticle(this.pos.x, this.pos.y, {delay:i*50});
                 me.game.world.addChild(b);
             }
             me.game.world.sort();
@@ -564,8 +679,21 @@ var Player = me.ObjectEntity.extend({
         var self = this;
         this.parent(dt);
 
+        LD30.data.souls = this.pickups;
+
         if(this.shootDelay >0){
             this.shootDelay-=dt;
+        }
+
+        if(this.disableInputTimer > 0){
+            this.disableInputTimer-=dt;
+            this.gravity = 0;
+            this.vel.x = 0;
+            this.vel.y = 0;
+            this.updateMovement();
+            return true;
+        }else{
+            this.gravity = 1;
         }
 
         this.followPos.x = this.pos.x + this.centerOffsetX;
@@ -609,7 +737,8 @@ var Player = me.ObjectEntity.extend({
             }
         }
 
-        if(!this.falling && this.vel.y == 0){
+        if(!this.falling && !this.jumping){
+            console.log("doblejump reset");
             this.doubleJumped = false;
             if(!me.input.isKeyPressed('right') && !me.input.isKeyPressed('left') && ! this.renderable.isCurrentAnimation("idle" + this.animationSuffix)&& ! this.renderable.isCurrentAnimation("shoot" + this.animationSuffix)){
                 this.renderable.setCurrentAnimation("idle" + this.animationSuffix);
@@ -634,7 +763,7 @@ var Player = me.ObjectEntity.extend({
 
                 //TODO: change character to normal texture here!
                 //TODO: if pickups <= 0, die!
-                this.necroMode = false;
+                //this.necroMode = false;
                 if(this.pickups > 0){
                     for( var i=0; i<this.pickups; i++){
                         var b = new OnHitPickup(this.pos.x, this.pos.y, {});
@@ -643,7 +772,7 @@ var Player = me.ObjectEntity.extend({
                     me.game.world.sort();
                     this.pickups = 0;
                 }
-                this.animationSuffix = "_normal";
+                //this.animationSuffix = "_normal";
 
                 this.hitTimer = 250;
                 this.collisionTimer = 1000;
@@ -671,19 +800,28 @@ var EnterPortalParticle = me.ObjectEntity.extend({
      * constructor
      */
     init: function (x, y, settings) {
-        settings.image = settings.image || 'pickup';
-        settings.spritewidth =  69;
-        settings.spriteheight = 117;
+        settings.image = settings.image || 'soulcharge';
+        settings.spritewidth =  36;
+        settings.spriteheight = 36;
         settings.width = 60;
         settings.height = 60;
         // call the parent constructor
         this.parent(x, y , settings);
-
+        this.gravity = 0;
         this.pickup = true;
-        this.vel.x = Math.random() * 20-10;
-        this.vel.y = -10 - Math.random()*10;
-        this.setFriction( 0.1, 0 );
+        //this.vel.x = Math.random() * 20-10;
+        //this.vel.y = -10 - Math.random()*10;
+        //this.setFriction( 0.1, 0 );
+        var d = settings.delay || 0;
         this.life = 2000;
+
+        var self = this;
+        new me.Tween(this.pos).to({x:this.pos.x +Math.random()*100-50, y: this.pos.y+Math.random()*100-50}, d).easing(me.Tween.Easing.Quintic.InOut).onComplete(function(){
+            new me.Tween(self.pos).to({x:self.pos.x +225, y: self.pos.y-25}, self.life).easing(me.Tween.Easing.Elastic.InOut).start();
+            new me.Tween(self.renderable).to({alpha:0}, self.life*0.25).delay(self.life*0.75).start();
+        }).start();
+
+
         //
         this.z = 300;
         this.collidable = false;
@@ -975,12 +1113,15 @@ var PlayScreen = me.ScreenObject.extend({
         this.overworld = true;
         this.subscription = me.event.subscribe(me.event.KEYDOWN, this.keyDown.bind(this));
 
+        this.HUD = new LD30.HUD.Container();
+        me.game.world.addChild(this.HUD);
     },
 
     toUnderworld: function() {
         if( this.overworld ) {
             this.overworld = false;
             this.updateLayerVisibility(this.overworld);
+            this.HUD.toUnderworld();
         }
     },
 

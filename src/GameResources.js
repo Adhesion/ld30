@@ -10,6 +10,7 @@ function _Level( name ) {
     return { name: name, type: "tmx", src: "data/" + name + ".tmx" };
 }
 
+
 var GameResources = [
     /* Radmars Logo */
     _Image( "intro_bg" ),
@@ -21,6 +22,17 @@ var GameResources = [
     _Image( "intro_radmars1" ),
     _Image( "intro_radmars2" ),
     _Audio( "radmarslogo" ),
+
+    // ui
+    _Image("16x16_font"),
+    _Image("32x32_font"),
+
+    _Image("soulcharge"),
+
+    _Image("ui_pickup"),
+    _Image("ui_pickup2"),
+    _Image("summon_gauge_bg"),
+    _Image("summon_gauge_fill"),
 
     // Player
     _Image( "zap" ),
