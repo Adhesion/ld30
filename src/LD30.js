@@ -518,7 +518,7 @@ var Wasp = Baddie.extend({
                 this.pausePatrol = 500;
                 this.shootCooldown = 2000;
                 var b = new  WaspBullet(this.pos.x, this.pos.y, {direction:this.direction });
-                me.audio.play( "enemyshoot");
+                me.audio.play("enemyshoot");
                 me.game.world.addChild(b);
                 me.game.world.sort();
             }
@@ -664,12 +664,12 @@ var Cat = Baddie.extend({
         if(this.shootCooldown > 0) this.shootCooldown-=dt;
 
         if(this.shootCooldown <= 0 && !me.state.current().player.overworld && !this.overworld){
-            me.audio.play( "enemyshoot");
             var d = me.state.current().player.pos.x - this.pos.x;
             if( (Math.abs(d) < 350 && Math.abs(d) > 150) && ((d > 0 && this.direction > 0)||(d < 0 && this.direction < 0))){
                 this.pausePatrol = 500;
                 this.shootCooldown = 2000;
                 var b = new  CatBullet(this.pos.x, this.pos.y, {direction:this.direction });
+                me.audio.play("enemyshoot");
                 me.game.world.addChild(b);
                 me.game.world.sort();
             }
