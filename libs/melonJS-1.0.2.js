@@ -10065,7 +10065,7 @@ window.me = window.me || {};
             var sound = audioTracks[sound_id.toLowerCase()];
             if (sound && typeof(sound) !== "undefined") {
 				console.log( "setting sound " + sound_id + " to mute value " + mute );
-                sound.mute(mute);
+                mute ? sound.mute() : sound.unmute();
             }
         };
 

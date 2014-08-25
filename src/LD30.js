@@ -1381,15 +1381,16 @@ var PlayScreen = me.ScreenObject.extend({
 
     /** Update the level display & music. Called on all level changes. */
     changeLevel: function( level ) {
+        me.audio.mute( "ld30-spirit" );
+        me.audio.unmute( "ld30-real" );
+
         // TODO: Makethis track the real variable...
         this.updateLayerVisibility(this.overworld);
         // this only gets called on start?
         me.game.world.sort();
+
         me.game.viewport.fadeOut( '#000000', 1000, function() {
         });
-		
-		me.audio.mute( "ld30-spirit" );
-		me.audio.unmute( "ld30-real" );
     },
 
     // this will be called on state change -> this
@@ -1398,13 +1399,14 @@ var PlayScreen = me.ScreenObject.extend({
         this.pickups = [];
         this.overworld = true;
 
-		me.audio.stopTrack();
-        me.audio.play( "ld30-real", true );
-		me.audio.play( "ld30-spirit", true );
-        me.audio.play( "portalrev" );
-
         var level =  location.hash.substr(1) || "level1" ;
         me.levelDirector.loadLevel( level );
+
+        me.audio.stopTrack();
+        me.audio.play( "ld30-real", true );
+        me.audio.play( "ld30-spirit", true );
+        me.audio.play( "portalrev" );
+
         this.changeLevel( level );
         this.HUD.startGame();
 
