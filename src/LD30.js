@@ -713,7 +713,7 @@ var Player = me.ObjectEntity.extend({
         this.necroMode = true;
         this.overworld = false;
 
-        this.z = 100;
+        this.z = 200;
         this.shootDelay = 0;
         this.disableInputTimer = 0;
 
@@ -723,7 +723,6 @@ var Player = me.ObjectEntity.extend({
         shape.resize(70, 110);
         me.state.current().player = this;
 
-        this.pickups = LD30.data.souls;
         this.collisionTimer = 0;
         this.deathTimer = 0;
         this.doubleJumped = false;
@@ -785,6 +784,8 @@ var Player = me.ObjectEntity.extend({
     toUnderworld: function(){
         if(this.overworld == true) return;
 
+
+
         this.overworld = true;
         this.necroMode = false;
         this.setVelocity( 7, 20 );
@@ -792,15 +793,15 @@ var Player = me.ObjectEntity.extend({
 
         this.disableInputTimer = 1500;
 
-        LD30.data.collectedSouls += this.pickups;
+        LD30.data.collectedSouls += LD30.data.souls;
         this.renderable.animationspeed = 165;
-        if(this.pickups > 0){
-            for( var i=0; i<this.pickups; i++){
+        if(LD30.data.souls > 0){
+            for( var i=0; i<LD30.data.souls; i++){
                 var b = new EnterPortalParticle(this.pos.x, this.pos.y, {delay:i*50});
                 me.game.world.addChild(b);
             }
             me.game.world.sort();
-            this.pickups = 0;
+            LD30.data.souls = 0;
         }
         this.animationSuffix = "_normal";
     },
@@ -829,8 +830,6 @@ var Player = me.ObjectEntity.extend({
     update: function(dt) {
         var self = this;
         this.parent(dt);
-
-        LD30.data.souls = this.pickups;
 
         if(this.shootDelay >0){
             this.shootDelay-=dt;
@@ -929,14 +928,14 @@ var Player = me.ObjectEntity.extend({
                 //TODO: change character to normal texture here!
                 //TODO: if pickups <= 0, die!
 
-                if(this.pickups > 0){
+                if(LD30.data.souls > 0){
                     me.game.viewport.shake(5, 250);
-                    for( var i=0; i<this.pickups; i++){
+                    for( var i=0; i<LD30.data.souls; i++){
                         var b = new OnHitPickup(this.pos.x, this.pos.y, {});
                         me.game.world.addChild(b);
                     }
                     me.game.world.sort();
-                    this.pickups = 0;
+                    LD30.data.souls = 0;
                     //this.necroMode = false;
                     //this.animationSuffix = "_normal";
                 }
@@ -1072,7 +1071,7 @@ var OnHitPickup = me.ObjectEntity.extend({
             if(this.pickupDelayTimer<=0 && col && col.obj.player && col.obj.collisionTimer <= 0 ) {
                 this.collidable = false;
                 me.game.world.removeChild(this);
-                me.state.current().player.pickups++;
+                LD30.data.souls++;
             }
         }, this );
 
@@ -1120,7 +1119,7 @@ var Pickup = me.ObjectEntity.extend({
             me.game.world.collide(this, true).forEach(function(col) {
                 if(col && col.obj.player && col.obj.collisionTimer <= 0 ) {
                     me.state.current().pickups.remove(this);
-                    me.state.current().player.pickups++;
+                    LD30.data.souls++;
                     this.collidable = false;
                     me.game.world.removeChild(this);
                 }
