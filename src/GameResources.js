@@ -67,6 +67,7 @@ var GameResources = [
     _Image( "paralax_normal1" ),
     _Image( "paralax_underworld1" ),
     _Image( "gateway" ),
+    _Image( "map_gateways" ),
 
     //_Audio( "beep", "data/" ),
 
