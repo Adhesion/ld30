@@ -390,7 +390,7 @@ var Baddie = me.ObjectEntity.extend({
         }
 
         this.parent( x, y, settings );
-        this.alwaysUpdate = true;
+        this.alwaysUpdate = false;
         this.baddie = true;
         this.setVelocity( 3, 15 );
         this.setFriction( 0.4, 0 );
@@ -1103,7 +1103,7 @@ var OnHitPickup = me.ObjectEntity.extend({
         }
 
         me.game.world.collide(this, true).forEach(function(col) {
-            if(this.pickupDelayTimer<=0 && col && col.obj.player && col.obj.collisionTimer <= 0 ) {
+            if(this.pickupDelayTimer<=0 && col && col.obj.player && col.obj.collisionTimer <= 0 && this.collidable) {
                 this.collidable = false;
                 me.game.world.removeChild(this);
                 LD30.data.souls++;
@@ -1153,7 +1153,7 @@ var Pickup = me.ObjectEntity.extend({
 
         if(me.state.current().player.overworld){
             me.game.world.collide(this, true).forEach(function(col) {
-                if(col && col.obj.player && col.obj.collisionTimer <= 0 ) {
+                if(col && col.obj.player && col.obj.collisionTimer <= 0 && this.collidable) {
                     me.state.current().pickups.remove(this);
                     LD30.data.souls++;
                     this.collidable = false;
@@ -1276,6 +1276,7 @@ var Bullet = me.ObjectEntity.extend({
         direction = settings.direction;
         this.parent( x, y, settings );
         this.bullet = true;
+        this.alwaysUpdate = true;
         this.collidable = true;
         this.z = 300;
         this.gravity = 0;
@@ -1283,6 +1284,8 @@ var Bullet = me.ObjectEntity.extend({
         this.flipX( direction < 0 );
 
         this.renderable.animationspeed = 10;
+
+        this.lifetime = 1200;
     },
 
     onCollision: function() {
@@ -1297,12 +1300,17 @@ var Bullet = me.ObjectEntity.extend({
     update: function( dt ) {
         this.parent( dt );
         this.updateMovement();
+        this.lifetime -= dt;
+
         if (!this.inViewport && (this.pos.y > me.video.getHeight())) {
             // if yes reset the game
             me.game.world.removeChild(this);
         }
         if( this.vel.x == 0 ) {
             // we hit a wall?
+            me.game.world.removeChild(this);
+        }
+        if (this.lifetime <= 0) {
             me.game.world.removeChild(this);
         }
 
@@ -1442,8 +1450,6 @@ var PlayScreen = me.ScreenObject.extend({
 
         this.changeLevel( level );
         this.HUD.startGame();
-
-
     },
 
     onDestroyEvent: function() {
