@@ -1,5 +1,6 @@
 var screenHeight = 560;
 var screenWidth = 960;
+var goodEnd = true;
 
 var LD30 = function() {
 
@@ -35,9 +36,11 @@ var LD30 = function() {
     this.loaded = function() {
 
         me.state.set( me.state.INTRO, new RadmarsScreen() );
+        me.state.set( me.state.MENU, new TitleScreen() );
         me.state.set( me.state.PLAY, new PlayScreen() );
+        me.state.set( me.state.GAMEOVER, new GameOverScreen() );
 
-        me.state.change( me.state.PLAY);
+        me.state.change( me.state.INTRO);
 
         me.pool.register( "player", Player );
         me.pool.register( "baddie", Baddie );
@@ -53,6 +56,92 @@ var LD30 = function() {
 
     };
 };
+
+var HitEnter = me.Renderable.extend({
+    init: function( x, y ) {
+        this.cta = me.loader.getImage("introcta");
+        this.parent( new me.Vector2d(x,y), this.cta.width, this.cta.height );
+        this.floating = true;
+        this.z = 5;
+        this.ctaFlicker = 0;
+    },
+
+    draw: function(context) {
+        this.ctaFlicker++;
+        if( this.ctaFlicker > 20 )
+        {
+            context.drawImage( this.cta, this.pos.x, this.pos.y );
+            if( this.ctaFlicker > 40 ) this.ctaFlicker = 0;
+        }
+    },
+
+    update: function(dt) {
+        me.game.repaint();
+    }
+});
+
+var GameOverScreen = me.ScreenObject.extend({
+    init: function() {
+        // disable HUD here?
+        this.parent( true );
+    },
+
+    onResetEvent: function()
+    {
+        this.gameover = new me.ImageLayer("gameover", screenWidth, screenHeight, goodEnd ? "win" : "lose", 0);
+
+        this.hitenter = new HitEnter( 333, goodEnd ? 535 : 535 );
+        me.game.world.addChild( this.hitenter );
+
+        me.game.world.addChild( this.gameover );
+        //me.audio.stopTrack();
+        //me.audio.playTrack( "ld29-intro" );
+
+        this.subscription = me.event.subscribe( me.event.KEYDOWN, function (action, keyCode, edge) {
+            if( keyCode === me.input.KEY.ENTER ) {
+                me.state.change( me.state.INTRO );
+            }
+        });
+    },
+
+    onDestroyEvent: function() {
+        me.audio.stopTrack();
+        me.game.world.removeChild( this.gameover );
+        me.event.unsubscribe( this.subscription );
+    }
+});
+
+var TitleScreen = me.ScreenObject.extend({
+    init: function() {
+        this.parent( true );
+    },
+
+    onResetEvent: function() {
+        this.bg = new me.ImageLayer( "title", screenWidth, screenHeight, "splash", 1 );
+
+        this.hitenter = new HitEnter( 333, 535 );
+
+        me.game.world.addChild( this.bg );
+        me.game.world.addChild( this.hitenter);
+
+        //me.audio.playTrack( "ld30-intro" );
+
+        this.subscription = me.event.subscribe( me.event.KEYDOWN, function (action, keyCode, edge) {
+            if( keyCode === me.input.KEY.ENTER ) {
+                me.state.change( me.state.PLAY );
+            }
+        });
+
+        goodEnd = false;
+    },
+
+    onDestroyEvent: function() {
+        me.game.world.removeChild( this.bg );
+        me.game.world.removeChild( this.hitenter );
+        me.event.unsubscribe( this.subscription );
+    }
+});
+
 
 var LevelChanger = me.ObjectEntity.extend({
     init: function(x, y, settings) {
@@ -643,6 +732,9 @@ var Player = me.ObjectEntity.extend({
                     me.game.world.sort();
                     this.pickups = 0;
                 }
+                else {
+                    me.state.change( me.state.GAMEOVER);
+                }
                 this.animationSuffix = "_normal";
 
                 this.hitTimer = 250;
@@ -1061,6 +1153,10 @@ var PlayScreen = me.ScreenObject.extend({
 
     // this will be called on state change -> this
     onResetEvent: function() {
+        this.baddies = [];
+        this.pickups = [];
+        this.overworld = true;
+
         var level =  location.hash.substr(1) || "level1" ;
         me.levelDirector.loadLevel( level );
         this.changeLevel( level );
@@ -1081,7 +1177,7 @@ var RadmarsScreen = me.ScreenObject.extend({
 
         this.subscription = me.event.subscribe( me.event.KEYDOWN, function (action, keyCode, edge) {
             if( keyCode === me.input.KEY.ENTER ) {
-                me.state.change( me.state.PLAY );
+                me.state.change( me.state.MENU);
             }
         });
 
