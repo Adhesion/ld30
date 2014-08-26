@@ -839,7 +839,7 @@ var Player = me.ObjectEntity.extend({
 
     shoot: function(){
         if(this.necroMode && this.shootDelay <= 0){
-            me.audio.play( "shoot" );
+            me.audio.play( "shoot", false, null, 0.6 );
             var b = new Bullet(this.pos.x + 30*this.direction, this.pos.y+40, { direction: this.direction });
             me.game.world.addChild(b);
             me.game.world.sort();
@@ -946,13 +946,13 @@ var Player = me.ObjectEntity.extend({
                 this.vel.y = -40;
                 this.jumping = true;
                 self.renderable.setCurrentAnimation("jump" + this.animationSuffix);
-                me.audio.play( "jump" );
+                me.audio.play( "jump", false, null, 0.6 );
             }
             else if((this.jumping || this.falling) && !this.doubleJumped){
                 this.doubleJumped = true;
                 this.vel.y = -40;
                 self.renderable.setCurrentAnimation("double_jump" + this.animationSuffix);
-                me.audio.play( "doublejump" );
+                me.audio.play( "doublejump", false, null, 0.6 );
             }
         }
 
