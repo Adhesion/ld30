@@ -145,10 +145,23 @@ LD30.HUD.SoulDisplay = me.Renderable.extend( {
                 self.showFindGate = false;
             }).start();
         }).start();
+
+        var h = this.getGaugeHeight();
+        this.gaugeRenderHeight.val = h;
     },
 
     endGame: function(){
         this.render = false;
+    },
+
+    getGaugeHeight: function() {
+        var collected = LD30.data.collectedSouls;
+        var max = LD30.data.collectedSoulsMax;
+        var h = Math.round((collected/max) * this.gaugeHeight);
+        if(h < 0) h=0;
+        if(h > this.gaugeHeight) h = this.gaugeHeight;
+
+        return h;
     },
 
     toUnderworld: function() {
@@ -157,11 +170,7 @@ LD30.HUD.SoulDisplay = me.Renderable.extend( {
             new me.Tween(self.gaugePos).to({x:860, y: 0}, 500).easing(me.Tween.Easing.Quintic.InOut).delay(2000).start();
 
             // tween for gauge filling
-            var collected = LD30.data.collectedSouls;
-            var max = LD30.data.collectedSoulsMax;
-            var h = Math.round((collected/max) * self.gaugeHeight);
-            if(h < 0) h=0;
-            if(h > this.gaugeHeight) h = self.gaugeHeight;
+            var h = self.getGaugeHeight();
 
             new me.Tween(self.gaugeRenderHeight).to({val: h}, 500).easing(me.Tween.Easing.Quintic.InOut).delay(750).start();
         }).start();
@@ -1440,6 +1449,7 @@ var PlayScreen = me.ScreenObject.extend({
         this.pickups = [];
         this.overworld = true;
         LD30.data.beatGame = false;
+        LD30.data.collectedSouls = 0;
         var level =  location.hash.substr(1) || "level1" ;
         me.levelDirector.loadLevel( level );
 
