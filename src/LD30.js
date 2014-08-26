@@ -126,7 +126,7 @@ LD30.HUD.SoulDisplay = me.Renderable.extend( {
 
         this.gaugePos = {x:860, y:0};
         this.gaugeHeight = 147;
-        this.gaugeRenderHeight = 1;
+        this.gaugeRenderHeight = {val:0};
         this.gaugeOffset = 0;
         this.render = false;
 
@@ -155,6 +155,15 @@ LD30.HUD.SoulDisplay = me.Renderable.extend( {
         var self = this;
         new me.Tween(self.gaugePos).to({x:700, y: 200}, 250).easing(me.Tween.Easing.Quintic.Out).onComplete(function(){
             new me.Tween(self.gaugePos).to({x:860, y: 0}, 500).easing(me.Tween.Easing.Quintic.InOut).delay(2000).start();
+
+            // tween for gauge filling
+            var collected = LD30.data.collectedSouls;
+            var max = LD30.data.collectedSoulsMax;
+            var h = Math.round((collected/max) * self.gaugeHeight);
+            if(h < 0) h=0;
+            if(h > this.gaugeHeight) h = self.gaugeHeight;
+
+            new me.Tween(self.gaugeRenderHeight).to({val: h}, 500).easing(me.Tween.Easing.Quintic.InOut).delay(750).start();
         }).start();
 
         this.showFindGate = false;
@@ -169,16 +178,6 @@ LD30.HUD.SoulDisplay = me.Renderable.extend( {
 
     update : function () {
         this.souls =  LD30.data.souls;
-
-        var collected = LD30.data.collectedSouls;
-        var max = LD30.data.collectedSoulsMax;
-        var h = Math.round((collected/max) * this.gaugeHeight);
-        if(h < 0) h=0;
-        if(h > this.gaugeHeight) h = this.gaugeHeight;
-
-        //TODO: animate this?
-        this.gaugeRenderHeight= h;
-        this.gaugeOffset = this.gaugeHeight - this.gaugeRenderHeight;
 
         return true;
     },
@@ -207,7 +206,8 @@ LD30.HUD.SoulDisplay = me.Renderable.extend( {
         }
 
         context.drawImage( this.gaugebg, this.pos.x + this.gaugePos.x, this.pos.y+ this.gaugePos.y );
-        context.drawImage( this.gauge, this.pos.x + this.gaugePos.x + 15, this.pos.y+ this.gaugePos.y + 54 + this.gaugeOffset, 21, this.gaugeRenderHeight );
+        this.gaugeOffset = this.gaugeHeight - this.gaugeRenderHeight.val;
+        context.drawImage( this.gauge, this.pos.x + this.gaugePos.x + 15, this.pos.y+ this.gaugePos.y + 54 + this.gaugeOffset, 21, this.gaugeRenderHeight.val );
         //(img_elem,dx_or_sx,dy_or_sy,dw_or_sw,dh_or_sh,dx,dy,dw,dh)
     }
 
