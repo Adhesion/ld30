@@ -104,7 +104,7 @@ LD30.HUD.SoulDisplay = me.Renderable.extend( {
 
         // create a font
         this.font = new me.BitmapFont("32x32_font", 32);
-        this.font.set("right");
+        //this.font.set("right");
 
         this.pickupTimer = 0;
         this.pickup1 = me.loader.getImage("ui_pickup");
@@ -190,7 +190,7 @@ LD30.HUD.SoulDisplay = me.Renderable.extend( {
             this.pickupTimer = 0;
         }
 
-        this.font.draw (context, this.souls, this.pos.x + 70, this.pos.y + 30);
+        this.font.draw (context, this.souls, this.pos.x + 50, this.pos.y + 30);
 
         if(this.pickupTimer > 25){
             context.drawImage( this.pickup2, this.pos.x, this.pos.y );
