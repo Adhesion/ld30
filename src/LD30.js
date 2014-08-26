@@ -14,13 +14,6 @@ var LD30 = function() {
 
         me.audio.init ("m4a,ogg" );
 
-        // TODO: Delete thie garbage
-        if (true) {
-            window.onReady(function () {
-                me.plugin.register.defer(this, debugPanel, "debug", me.input.KEY.V);
-                me.debug.renderHitBox = false;
-            });
-        }
         // Sync up post loading stuff.
         me.loader.onload = this.loaded.bind( this );
 
