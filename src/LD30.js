@@ -349,6 +349,8 @@ var GameEnder = me.ObjectEntity.extend({
 
         me.game.world.collide(this, true).forEach(function(col) {
             if(col && col.obj == me.state.current().player  ) {
+                LD30.data.collectedSouls += LD30.data.souls;
+                LD30.data.souls = 0;
                 me.state.current().endGame();
             }
         }, this);
