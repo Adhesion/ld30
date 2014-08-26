@@ -333,9 +333,9 @@ var LevelChanger = me.ObjectEntity.extend({
 var GameEnder = me.ObjectEntity.extend({
     init: function(x, y, settings) {
         // TODO: Just bake image or attach to obj?
-        settings.image = "gateway";
-        settings.spritewidth = 144;
-        settings.spriteheight = 192;
+        settings.image = settings.image || 'pickup';
+        settings.spritewidth =  69;
+        settings.spriteheight = 117;
         this.toLevel = settings.toLevel;
         this.parent( x, y, settings );
         this.gravity = 0;
