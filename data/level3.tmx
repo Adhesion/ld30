@@ -79,7 +79,6 @@
   <object name="wasp" x="4962" y="497" width="85" height="170"/>
   <object name="wasp" x="5234" y="499" width="85" height="170"/>
   <object name="crab" x="5620" y="1060" width="623" height="86"/>
-  <object name="fish" x="5908" y="831" width="85" height="72"/>
   <object name="wasp" x="5934" y="413" width="85" height="170"/>
   <object name="wasp" x="7064" y="497" width="85" height="170"/>
   <object name="wasp" x="7398" y="499" width="85" height="170"/>
@@ -87,9 +86,7 @@
   <object name="fish" x="7013" y="872" width="295" height="88"/>
   <object name="fish" x="7309" y="874" width="281" height="86"/>
   <object name="fish" x="7593" y="874" width="199" height="86"/>
-  <object name="crab" x="8211" y="391" width="307" height="90"/>
-  <object name="fish" x="7876" y="582" width="255" height="86"/>
-  <object name="fish" x="8595" y="579" width="263" height="84"/>
+  <object name="fish" x="8237" y="390" width="255" height="86"/>
   <object name="wasp" x="9604" y="435" width="85" height="170"/>
   <object name="wasp" x="9604" y="811" width="85" height="170"/>
   <object name="levelchanger" x="383" y="993" width="144" height="192">
