@@ -1450,6 +1450,7 @@ var PlayScreen = me.ScreenObject.extend({
         this.overworld = true;
         LD30.data.beatGame = false;
         LD30.data.collectedSouls = 0;
+        LD30.data.souls = 1;
         var level =  location.hash.substr(1) || "level1" ;
         me.levelDirector.loadLevel( level );
 
