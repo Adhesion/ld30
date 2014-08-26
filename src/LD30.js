@@ -53,7 +53,7 @@ var LD30 = function() {
 };
 
 
-LD30.data = {souls:1, collectedSouls:0, collectedSoulsMax:10, beatGame:false};
+LD30.data = {souls:1, collectedSouls:0, collectedSoulsMax:15, beatGame:false};
 
 LD30.HUD = LD30.HUD || {};
 
